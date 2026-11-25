@@ -2,7 +2,8 @@ name: Deploy ChessMate website
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
