@@ -2,7 +2,7 @@
 // Everything is served from /engine, so no CDN or special HTTP headers are needed.
 // All jobs run one at a time through a FIFO queue; analysis results are cached by FEN.
 
-const ENGINE_URL = "/engine/stockfish-19-lite-single.js";
+const ENGINE_URL = new URL("../engine/stockfish-19-lite-single.js", import.meta.url);
 
 // Computer opponent strength presets.
 export const LEVELS = [
