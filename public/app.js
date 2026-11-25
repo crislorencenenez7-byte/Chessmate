@@ -1,6 +1,6 @@
-import { Chess } from "/vendor/chess.js";
-import { Engine, LEVELS } from "/js/engine.js";
-import { CLASSES, classifyMove, whiteScore, whiteWinPct, scoreText } from "/js/classify.js";
+import { Chess } from "./vendor/chess.js";
+import { Engine, LEVELS } from "./js/engine.js";
+import { CLASSES, classifyMove, whiteScore, whiteWinPct, scoreText } from "./js/classify.js";
 
 const $ = id => document.getElementById(id);
 const FILES = "abcdefgh";
@@ -459,7 +459,7 @@ function renderPromo() {
   const color = viewChess().turn();
   const el = $("promo");
   el.innerHTML = ["q", "r", "b", "n"].map(t =>
-    `<button data-p="${t}" aria-label="Promote to ${PIECE_NAME[t]}"><img src="/pieces/${color}${t.toUpperCase()}.svg" alt=""></button>`).join("");
+    `<button data-p="${t}" aria-label="Promote to ${PIECE_NAME[t]}"><img src="pieces/${color}${t.toUpperCase()}.svg" alt=""></button>`).join("");
   const s = $("board").clientWidth / 8;
   const [c, r] = coordsOf(to);
   el.style.left = c * s + "px";
@@ -603,7 +603,7 @@ function setupUI() {
   // hero decoration (SVG pieces, no Unicode glyphs)
   const hero = ["", "bK", "", "bR", "bP", "bP", "", "", "", "wN", "wQ", "", "wP", "wK", "", "wR"];
   $("hero-board").innerHTML = hero.map((p, i) =>
-    `<div style="background:${((i % 4) + Math.floor(i / 4)) % 2 ? "var(--dark)" : "var(--light)"}">${p ? `<img src="/pieces/${p}.svg" alt="">` : ""}</div>`).join("");
+    `<div style="background:${((i % 4) + Math.floor(i / 4)) % 2 ? "var(--dark)" : "var(--light)"}">${p ? `<img src="pieces/${p}.svg" alt="">` : ""}</div>`).join("");
 
   document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => {
     const m = b.dataset.mode;
