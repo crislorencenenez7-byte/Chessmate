@@ -48,6 +48,27 @@ async function initDb() {
       ON matches (id DESC);
   `);
 
+  await pool.query(
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
+  );
+
+  // Only the existing CrisLorence account receives Admin privileges.
+  await pool.query(
+    "UPDATE users SET is_admin = (username = $1)",
+    ["CrisLorence"]
+  );
+
+  const adminCheck = await pool.query(
+    "SELECT id FROM users WHERE username = $1 AND is_admin = TRUE",
+    ["CrisLorence"]
+  );
+
+  if (adminCheck.rows.length) {
+    console.log("Admin account verified: CrisLorence.");
+  } else {
+    console.warn("ADMIN WARNING: CrisLorence account not found. No account was created.");
+  }
+
   console.log("PostgreSQL tables are ready.");
 }
 

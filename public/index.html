@@ -75,7 +75,7 @@
     </button>
   </div>
   <div id="home-message" class="notice"></div>
-<button id="admin-open" class="ghost small">Admin Dashboard</button>
+<button id="admin-open" class="ghost small" hidden>Admin Dashboard</button>
 </section>
 
 <!-- GAME: only the board, the evaluation bar and the move information -->
@@ -205,18 +205,11 @@
   <button class="ghost back">← Menu</button>
   <h2>Admin Dashboard</h2>
 
-  <div id="admin-login-panel" class="form-card">
-    <h3>Admin Login</h3>
-    <input id="admin-user" value="Admin" autocomplete="username" readonly>
-    <input id="admin-pass" type="password" placeholder="Admin password" autocomplete="current-password">
-    <button id="admin-login" class="primary">Log in as Admin</button>
-    <p id="admin-error" class="notice"></p>
-  </div>
+  <p id="admin-error" class="notice"></p>
 
   <div id="admin-panel" class="form-card" hidden>
     <div class="admin-heading">
-      <h3>Welcome, Admin</h3>
-      <button id="admin-logout" class="ghost small">Log out</button>
+      <h3>Welcome, CrisLorence</h3>
     </div>
 
     <h3>Global Announcement</h3>

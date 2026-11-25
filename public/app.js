@@ -16,7 +16,7 @@ const socket = typeof window.io === "function"
 const engine = new Engine();
 
 let token = store("cm_token") || "";
-let adminToken = store("cm_admin_token") || "";
+
 let adminAuthenticated = false;
 let alwaysShowBrilliantMove = false;
 let announcementTimer = null;
@@ -80,7 +80,7 @@ async function adminApi(url, opts = {}) {
     ...opts,
     headers: {
       "Content-Type": "application/json",
-      ...(adminToken ? { Authorization: "Bearer " + adminToken } : {}),
+      ...(token ? { Authorization: "Bearer " + token } : {}),
       ...(opts.headers || {})
     }
   });
@@ -128,7 +128,12 @@ function showGlobalAnnouncement(data) {
 }
 
 async function loadAdminSettings() {
-  adminAuthenticated = false;
+  if (!user?.isAdmin || !token) {
+    adminAuthenticated = false;
+    clearAdminCoach();
+    throw new Error("Admin access required.");
+  }
+
   const d = await adminApi("/api/admin/settings");
   alwaysShowBrilliantMove = !!d.alwaysShowBrilliantMove;
   adminAuthenticated = true;
@@ -143,10 +148,16 @@ async function loadPublicSettings() {
 
 function setUser(u) {
   user = u;
+  adminAuthenticated = u?.isAdmin === true;
   $("user-rating").textContent = u ? `${u.rating} ELO` : "Guest";
   $("auth-open").textContent = u ? u.username : "Log in";
   $("rank-rating").textContent = u?.rating ?? "—";
   $("rank-tier").textContent = u ? tier(u.rating) : "—";
+
+  const adminButton = $("admin-open");
+  if (adminButton) adminButton.hidden = !adminAuthenticated;
+
+  if (!adminAuthenticated) clearAdminCoach();
   if (token && socket.connected) socket.emit("authenticate", token);
 }
 
@@ -560,18 +571,6 @@ function render() {
 
 // Classification badge: top-right corner of the piece that just moved, only once analysed.
 
-function adminTokenIsUnexpired() {
-  try {
-    if (!adminToken) return false;
-    const payload = JSON.parse(atob(
-      adminToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")
-    ));
-    return Number(payload.exp) * 1000 > Date.now();
-  } catch {
-    return false;
-  }
-}
-
 function clearAdminCoach() {
   adminCoachRequest++;
   adminCoachPosition = "";
@@ -586,14 +585,16 @@ async function renderAdminCoach() {
   let hint = $("admin-coach-hint");
   let svg = $("admin-coach-arrow");
 
-  if (!adminAuthenticated || !adminTokenIsUnexpired() || !G || !engine || engine.state === "failed") {
-    if (adminAuthenticated && !adminTokenIsUnexpired()) adminAuthenticated = false;
+  if (!adminAuthenticated || !user?.isAdmin || !G || !engine || engine.state === "failed") {
     clearAdminCoach();
     return;
   }
 
   const fen = fenAt(G.view);
-  if (!fen) return;
+  if (!fen) {
+    clearAdminCoach();
+    return;
+  }
 
   if (!hint) {
     hint = document.createElement("div");
@@ -612,7 +613,7 @@ async function renderAdminCoach() {
 
   try {
     const analysis = await engine.analyze(fen);
-    if (requestId !== adminCoachRequest || !adminAuthenticated || !adminTokenIsUnexpired() || !G || fenAt(G.view) !== fen) return;
+    if (requestId !== adminCoachRequest || !adminAuthenticated || !user?.isAdmin || !G || fenAt(G.view) !== fen) return;
 
     const best = analysis?.lines?.[0]?.move;
     if (!best || best.length < 4) {
@@ -1034,74 +1035,27 @@ function setupUI() {
   };
   $("ai-start").onclick = startAi;
 
-  // Admin dashboard
-  $("admin-open").onclick = () => {
-    $("admin-error").textContent = "";
-    $("admin-login-panel").hidden = !!adminToken;
-    $("admin-panel").hidden = true;
-    $("admin-pass").value = "";
-    show("admin");
-    if (adminToken) {
-      loadAdminSettings().then(() => {
-        $("admin-login-panel").hidden = true;
-        $("admin-panel").hidden = false;
-        renderBadge();
-      }).catch(e => {
-        adminAuthenticated = false;
-        adminToken = "";
-        store("cm_admin_token", null);
-        clearAdminCoach();
-        $("admin-login-panel").hidden = false;
-        $("admin-panel").hidden = true;
-        $("admin-error").textContent = e.message;
-      });
-    } else {
-      $("admin-login-panel").hidden = false;
+  // Admin dashboard: only the verified CrisLorence account can open it.
+  $("admin-open").onclick = async () => {
+    if (!user?.isAdmin || !token) {
+      $("admin-open").hidden = true;
+      return toast("Admin access required.");
     }
-  };
 
-  $("admin-login").onclick = async () => {
+    $("admin-error").textContent = "";
+    $("admin-panel").hidden = true;
+    show("admin");
+
     try {
-      const d = await adminApi("/api/admin/login", {
-        method: "POST",
-        body: JSON.stringify({
-          username: "Admin",
-          password: $("admin-pass").value
-        })
-      });
-      adminToken = d.token;
-      store("cm_admin_token", adminToken);
-      $("admin-pass").value = "";
-      $("admin-error").textContent = "";
-      $("admin-login-panel").hidden = true;
-      $("admin-panel").hidden = false;
       await loadAdminSettings();
+      $("admin-panel").hidden = false;
       renderBadge();
-      toast("Admin login successful.");
     } catch (e) {
       adminAuthenticated = false;
-      adminToken = "";
-      store("cm_admin_token", null);
       clearAdminCoach();
       $("admin-panel").hidden = true;
-      $("admin-login-panel").hidden = false;
       $("admin-error").textContent = e.message;
     }
-  };
-
-  $("admin-pass").addEventListener("keydown", e => {
-    if (e.key === "Enter") $("admin-login").click();
-  });
-
-  $("admin-logout").onclick = () => {
-    adminAuthenticated = false;
-    adminToken = "";
-    store("cm_admin_token", null);
-    clearAdminCoach();
-    $("admin-login-panel").hidden = false;
-    $("admin-panel").hidden = true;
-    $("admin-pass").value = "";
-    toast("Admin logged out.");
   };
 
   $("admin-send-announcement").onclick = async () => {

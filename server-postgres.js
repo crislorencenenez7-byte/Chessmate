@@ -70,45 +70,34 @@ function auth(req, res, next) {
 }
 
 
-function adminAuth(req, res, next) {
+async function adminAuth(req, res, next) {
   const token = (req.headers.authorization || "").replace(/^Bearer /, "");
+
+  let payload;
   try {
-    const payload = jwt.verify(token, SECRET);
-    if (payload.role !== "admin") {
+    payload = jwt.verify(token, SECRET);
+  } catch {
+    return res.status(401).json({ error: "Please log in first." });
+  }
+
+  try {
+    const result = await pool.query(
+      "SELECT id, username, is_admin FROM users WHERE id = $1",
+      [payload.id]
+    );
+
+    const account = result.rows[0];
+    if (!account || account.is_admin !== true) {
       return res.status(403).json({ error: "Admin access required." });
     }
-    req.admin = payload;
+
+    req.admin = account;
     next();
-  } catch {
-    res.status(401).json({ error: "Admin login required." });
+  } catch (error) {
+    console.error("Admin authentication error:", error.message);
+    res.status(500).json({ error: "Could not verify Admin access." });
   }
 }
-
-app.post("/api/admin/login", (req, res) => {
-  const configured = process.env.ADMIN_PASSWORD || "";
-  const username = String(req.body.username || "");
-  const password = String(req.body.password || "");
-
-  if (!configured) {
-    return res.status(503).json({ error: "Admin password is not configured on the server." });
-  }
-
-  const a = Buffer.from(password);
-  const b = Buffer.from(configured);
-  const validPassword = a.length === b.length && crypto.timingSafeEqual(a, b);
-
-  if (username !== "Admin" || !validPassword) {
-    return res.status(401).json({ error: "Incorrect admin username or password." });
-  }
-
-  const token = jwt.sign(
-    { role: "admin", username: "Admin" },
-    SECRET,
-    { expiresIn: "12h" }
-  );
-
-  res.json({ token, username: "Admin" });
-});
 
 app.get("/api/settings", async (req, res) => {
   try {
@@ -184,6 +173,7 @@ function publicUser(u) {
   return {
     id: u.id,
     username: u.username,
+    isAdmin: u.is_admin === true,
     rating: u.rating,
     highestRating: u.highest_rating,
     wins: u.wins,
