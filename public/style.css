@@ -855,3 +855,45 @@ h2 {
 .pwa-banner span{flex:1;min-width:0}
 .pwa-banner button{white-space:nowrap}
 @media(max-width:420px){.pwa-banner{flex-wrap:wrap}.pwa-banner span{flex-basis:100%}}
+
+/* Scheduled update banner */
+.update-banner {
+  margin: 10px 0;
+  padding: 13px 15px;
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+}
+.update-banner[hidden] {
+  display: none;
+}
+.update-banner-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+#update-countdown {
+  color: var(--gold);
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#update-date {
+  color: var(--gold);
+}
+#update-description {
+  margin: 7px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+@media(max-width:420px) {
+  .update-banner-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
