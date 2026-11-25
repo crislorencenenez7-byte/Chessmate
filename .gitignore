@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+data/*
+!data/.gitkeep
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.bak
+.DS_Store
+*.before-*

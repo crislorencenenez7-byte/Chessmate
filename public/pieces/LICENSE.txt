@@ -1,0 +1,3 @@
+Chess piece artwork: "Standard" set by Colin M.L. Burnett (Cburnett) and Rfc1394,
+Wikimedia Commons, licensed CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/).
+Pieces were split from the cm-chessboard sprite (MIT, Stefan Haack) and re-framed (viewBox only).
