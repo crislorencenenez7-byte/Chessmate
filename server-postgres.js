@@ -19,7 +19,7 @@ if (fs.existsSync(envFile)) {
   }
 }
 
-const { pool, initDb } = require("./db");
+const { pool, initDb, initAdminSettings } = require("./db");
 
 const app = express();
 const server = http.createServer(app);
@@ -68,6 +68,117 @@ function auth(req, res, next) {
     res.status(401).json({ error: "Please log in." });
   }
 }
+
+
+function adminAuth(req, res, next) {
+  const token = (req.headers.authorization || "").replace(/^Bearer /, "");
+  try {
+    const payload = jwt.verify(token, SECRET);
+    if (payload.role !== "admin") {
+      return res.status(403).json({ error: "Admin access required." });
+    }
+    req.admin = payload;
+    next();
+  } catch {
+    res.status(401).json({ error: "Admin login required." });
+  }
+}
+
+app.post("/api/admin/login", (req, res) => {
+  const configured = process.env.ADMIN_PASSWORD || "";
+  const username = String(req.body.username || "");
+  const password = String(req.body.password || "");
+
+  if (!configured) {
+    return res.status(503).json({ error: "Admin password is not configured on the server." });
+  }
+
+  const a = Buffer.from(password);
+  const b = Buffer.from(configured);
+  const validPassword = a.length === b.length && crypto.timingSafeEqual(a, b);
+
+  if (username !== "Admin" || !validPassword) {
+    return res.status(401).json({ error: "Incorrect admin username or password." });
+  }
+
+  const token = jwt.sign(
+    { role: "admin", username: "Admin" },
+    SECRET,
+    { expiresIn: "12h" }
+  );
+
+  res.json({ token, username: "Admin" });
+});
+
+app.get("/api/settings", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT value FROM app_settings WHERE key=$1",
+      ["always_show_brilliant_move"]
+    );
+    res.json({
+      alwaysShowBrilliantMove: result.rows[0]?.value === true
+    });
+  } catch (error) {
+    console.error("Settings error:", error.message);
+    res.status(500).json({ error: "Could not load settings." });
+  }
+});
+
+app.get("/api/admin/settings", adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT value FROM app_settings WHERE key=$1",
+      ["always_show_brilliant_move"]
+    );
+    res.json({
+      alwaysShowBrilliantMove: result.rows[0]?.value === true
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Could not load admin settings." });
+  }
+});
+
+app.post("/api/admin/settings/brilliant-move", adminAuth, async (req, res) => {
+  const enabled = req.body.enabled;
+  if (typeof enabled !== "boolean") {
+    return res.status(400).json({ error: "enabled must be true or false." });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO app_settings(key,value,updated_at)
+       VALUES($1,$2::jsonb,NOW())
+       ON CONFLICT(key) DO UPDATE
+       SET value=EXCLUDED.value, updated_at=NOW()`,
+      ["always_show_brilliant_move", JSON.stringify(enabled)]
+    );
+
+    io.emit("app-settings", { alwaysShowBrilliantMove: enabled });
+    res.json({ success: true, alwaysShowBrilliantMove: enabled });
+  } catch (error) {
+    console.error("Brilliant Move setting error:", error.message);
+    res.status(500).json({ error: "Could not save setting." });
+  }
+});
+
+app.post("/api/admin/announcement", adminAuth, (req, res) => {
+  const message = String(req.body.message || "").trim();
+
+  if (!message || message.length > 180) {
+    return res.status(400).json({ error: "Announcement must be 1–180 characters." });
+  }
+
+  const announcement = {
+    id: crypto.randomUUID(),
+    username: "CrisLorence",
+    verified: true,
+    message
+  };
+
+  io.emit("global-announcement", announcement);
+  res.json({ success: true });
+});
 
 function publicUser(u) {
   return {
@@ -614,6 +725,7 @@ io.on("connection", socket => {
 });
 
 initDb()
+  .then(() => initAdminSettings())
   .then(() => {
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`ChessMate PostgreSQL server listening on port ${PORT}`);

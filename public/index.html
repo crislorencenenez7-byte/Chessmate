@@ -75,6 +75,7 @@
     </button>
   </div>
   <div id="home-message" class="notice"></div>
+<button id="admin-open" class="ghost small">Admin Dashboard</button>
 </section>
 
 <!-- GAME: only the board, the evaluation bar and the move information -->
@@ -196,6 +197,35 @@
   <button class="ghost back">← Menu</button>
   <h2>Match History</h2>
   <div id="history-list" class="list">Loading…</div>
+</section>
+
+
+<!-- ADMIN DASHBOARD -->
+<section id="admin" class="screen">
+  <button class="ghost back">← Menu</button>
+  <h2>Admin Dashboard</h2>
+
+  <div id="admin-login-panel" class="form-card">
+    <h3>Admin Login</h3>
+    <input id="admin-user" value="Admin" autocomplete="username" readonly>
+    <input id="admin-pass" type="password" placeholder="Admin password" autocomplete="current-password">
+    <button id="admin-login" class="primary">Log in as Admin</button>
+    <p id="admin-error" class="notice"></p>
+  </div>
+
+  <div id="admin-panel" class="form-card" hidden>
+    <div class="admin-heading">
+      <h3>Welcome, Admin</h3>
+      <button id="admin-logout" class="ghost small">Log out</button>
+    </div>
+
+    <h3>Global Announcement</h3>
+    <p class="muted">Send a message to every connected player. It disappears after 7 seconds.</p>
+    <input id="admin-announcement" maxlength="180" placeholder="Write an announcement...">
+    <button id="admin-send-announcement" class="primary">Publish Announcement</button>
+
+
+  </div>
 </section>
 
 <!-- AUTH -->

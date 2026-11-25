@@ -16,6 +16,13 @@ const socket = typeof window.io === "function"
 const engine = new Engine();
 
 let token = store("cm_token") || "";
+let adminToken = store("cm_admin_token") || "";
+let adminAuthenticated = false;
+let alwaysShowBrilliantMove = false;
+let announcementTimer = null;
+let adminCoachRequest = 0;
+let adminCoachPosition = "";
+
 let user = null;
 let authMode = "login";
 let G = null;          // the current game (null when no game screen is active)
@@ -67,6 +74,73 @@ async function api(url, opts = {}) {
   if (!r.ok) throw Error(d.error || "Request failed");
   return d;
 }
+
+async function adminApi(url, opts = {}) {
+  const r = await fetch(BACKEND_URL + url, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...(adminToken ? { Authorization: "Bearer " + adminToken } : {}),
+      ...(opts.headers || {})
+    }
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw Error(d.error || "Admin request failed");
+  return d;
+}
+
+function showGlobalAnnouncement(data) {
+  let el = $("global-announcement");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "global-announcement";
+    el.className = "global-announcement";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+
+  clearTimeout(announcementTimer);
+  el.replaceChildren();
+
+  const name = document.createElement("strong");
+  name.className = "ga-name";
+  name.textContent = String(data.username || "CrisLorence");
+  el.appendChild(name);
+
+  if (data.verified) {
+    const check = document.createElement("span");
+    check.className = "ga-check";
+    check.textContent = " ☑";
+    check.setAttribute("aria-label", "Verified");
+    el.appendChild(check);
+  }
+
+  const message = document.createElement("span");
+  message.className = "ga-message";
+  message.textContent = ": " + String(data.message || "");
+  el.appendChild(message);
+
+  el.hidden = false;
+  announcementTimer = setTimeout(() => {
+    el.hidden = true;
+    el.replaceChildren();
+  }, 7000);
+}
+
+async function loadAdminSettings() {
+  adminAuthenticated = false;
+  const d = await adminApi("/api/admin/settings");
+  alwaysShowBrilliantMove = !!d.alwaysShowBrilliantMove;
+  adminAuthenticated = true;
+}
+
+async function loadPublicSettings() {
+  try {
+    const d = await api("/api/settings");
+    alwaysShowBrilliantMove = !!d.alwaysShowBrilliantMove;
+  } catch {}
+}
+
 function setUser(u) {
   user = u;
   $("user-rating").textContent = u ? `${u.rating} ELO` : "Guest";
@@ -485,7 +559,120 @@ function render() {
 }
 
 // Classification badge: top-right corner of the piece that just moved, only once analysed.
+
+function adminTokenIsUnexpired() {
+  try {
+    if (!adminToken) return false;
+    const payload = JSON.parse(atob(
+      adminToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")
+    ));
+    return Number(payload.exp) * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function clearAdminCoach() {
+  adminCoachRequest++;
+  adminCoachPosition = "";
+  $("admin-coach-hint")?.remove();
+  $("admin-coach-arrow")?.remove();
+}
+
+async function renderAdminCoach() {
+  const board = $("board");
+  if (!board) return;
+
+  let hint = $("admin-coach-hint");
+  let svg = $("admin-coach-arrow");
+
+  if (!adminAuthenticated || !adminTokenIsUnexpired() || !G || !engine || engine.state === "failed") {
+    if (adminAuthenticated && !adminTokenIsUnexpired()) adminAuthenticated = false;
+    clearAdminCoach();
+    return;
+  }
+
+  const fen = fenAt(G.view);
+  if (!fen) return;
+
+  if (!hint) {
+    hint = document.createElement("div");
+    hint.id = "admin-coach-hint";
+    hint.className = "admin-coach-hint";
+    board.parentElement.appendChild(hint);
+  }
+
+  const positionKey = fen + "|" + G.view;
+  if (positionKey === adminCoachPosition) return;
+  adminCoachPosition = positionKey;
+  const requestId = ++adminCoachRequest;
+
+  hint.textContent = "Admin Coach: Analyzing best move...";
+  if (svg) svg.remove();
+
+  try {
+    const analysis = await engine.analyze(fen);
+    if (requestId !== adminCoachRequest || !adminAuthenticated || !adminTokenIsUnexpired() || !G || fenAt(G.view) !== fen) return;
+
+    const best = analysis?.lines?.[0]?.move;
+    if (!best || best.length < 4) {
+      hint.textContent = "Admin Coach: No move recommendation available.";
+      return;
+    }
+
+    const from = best.slice(0, 2);
+    const to = best.slice(2, 4);
+    hint.textContent = `ADMIN COACH · BEST MOVE: ${from.toUpperCase()} → ${to.toUpperCase()}`;
+
+    const a = board.querySelector(`[data-sq="${from}"]`);
+    const b = board.querySelector(`[data-sq="${to}"]`);
+    if (!a || !b) return;
+
+    const br = board.getBoundingClientRect();
+    const ar = a.getBoundingClientRect();
+    const tr = b.getBoundingClientRect();
+
+    svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.id = "admin-coach-arrow";
+    svg.setAttribute("viewBox", `0 0 ${br.width} ${br.height}`);
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.classList.add("admin-coach-arrow");
+
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    marker.setAttribute("id", "admin-coach-head");
+    marker.setAttribute("markerWidth", "8");
+    marker.setAttribute("markerHeight", "8");
+    marker.setAttribute("refX", "6");
+    marker.setAttribute("refY", "3");
+    marker.setAttribute("orient", "auto");
+    const tip = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    tip.setAttribute("d", "M0,0 L0,6 L6,3 z");
+    tip.setAttribute("fill", "#20d878");
+    marker.appendChild(tip);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", ar.left + ar.width / 2 - br.left);
+    line.setAttribute("y1", ar.top + ar.height / 2 - br.top);
+    line.setAttribute("x2", tr.left + tr.width / 2 - br.left);
+    line.setAttribute("y2", tr.top + tr.height / 2 - br.top);
+    line.setAttribute("stroke", "#20d878");
+    line.setAttribute("stroke-width", "7");
+    line.setAttribute("stroke-linecap", "round");
+    line.setAttribute("marker-end", "url(#admin-coach-head)");
+    svg.appendChild(line);
+    board.appendChild(svg);
+  } catch (e) {
+    if (requestId === adminCoachRequest && hint) {
+      hint.textContent = "Admin Coach: Analysis unavailable.";
+    }
+  }
+}
+
 function renderBadge() {
+  renderAdminCoach();
   document.querySelectorAll("#board .badge").forEach(b => b.remove());
   if (!G || G.view === 0) return;
   const ply = G.plies[G.view - 1];
@@ -847,6 +1034,95 @@ function setupUI() {
   };
   $("ai-start").onclick = startAi;
 
+  // Admin dashboard
+  $("admin-open").onclick = () => {
+    $("admin-error").textContent = "";
+    $("admin-login-panel").hidden = !!adminToken;
+    $("admin-panel").hidden = true;
+    $("admin-pass").value = "";
+    show("admin");
+    if (adminToken) {
+      loadAdminSettings().then(() => {
+        $("admin-login-panel").hidden = true;
+        $("admin-panel").hidden = false;
+        renderBadge();
+      }).catch(e => {
+        adminAuthenticated = false;
+        adminToken = "";
+        store("cm_admin_token", null);
+        clearAdminCoach();
+        $("admin-login-panel").hidden = false;
+        $("admin-panel").hidden = true;
+        $("admin-error").textContent = e.message;
+      });
+    } else {
+      $("admin-login-panel").hidden = false;
+    }
+  };
+
+  $("admin-login").onclick = async () => {
+    try {
+      const d = await adminApi("/api/admin/login", {
+        method: "POST",
+        body: JSON.stringify({
+          username: "Admin",
+          password: $("admin-pass").value
+        })
+      });
+      adminToken = d.token;
+      store("cm_admin_token", adminToken);
+      $("admin-pass").value = "";
+      $("admin-error").textContent = "";
+      $("admin-login-panel").hidden = true;
+      $("admin-panel").hidden = false;
+      await loadAdminSettings();
+      renderBadge();
+      toast("Admin login successful.");
+    } catch (e) {
+      adminAuthenticated = false;
+      adminToken = "";
+      store("cm_admin_token", null);
+      clearAdminCoach();
+      $("admin-panel").hidden = true;
+      $("admin-login-panel").hidden = false;
+      $("admin-error").textContent = e.message;
+    }
+  };
+
+  $("admin-pass").addEventListener("keydown", e => {
+    if (e.key === "Enter") $("admin-login").click();
+  });
+
+  $("admin-logout").onclick = () => {
+    adminAuthenticated = false;
+    adminToken = "";
+    store("cm_admin_token", null);
+    clearAdminCoach();
+    $("admin-login-panel").hidden = false;
+    $("admin-panel").hidden = true;
+    $("admin-pass").value = "";
+    toast("Admin logged out.");
+  };
+
+  $("admin-send-announcement").onclick = async () => {
+    const button = $("admin-send-announcement");
+    const message = $("admin-announcement").value.trim();
+    if (!message) return toast("Write an announcement first.");
+    button.disabled = true;
+    try {
+      await adminApi("/api/admin/announcement", {
+        method: "POST",
+        body: JSON.stringify({ message })
+      });
+      $("admin-announcement").value = "";
+      $("admin-status").textContent = "Announcement published.";
+    } catch (e) {
+      $("admin-status").textContent = e.message;
+    } finally {
+      button.disabled = false;
+    }
+  };
+
   // auth
   $("auth-open").onclick = () => {
     if (user) { if (confirm(`Log out of ${user.username}?`)) { token = ""; store("cm_token", null); setUser(null); toast("Logged out."); } return; }
@@ -1027,6 +1303,10 @@ socket.on("game-over", d => {
 socket.on("opponent-left", () => { if (G && G.roomCode && !G.over) toast("Your opponent disconnected or left."); });
 socket.on("opponent-back", () => toast("Your opponent reconnected."));
 socket.on("queue-status", t => { $("rank-status").textContent = t; });
+socket.on("global-announcement", showGlobalAnnouncement);
+socket.on("app-settings", data => {
+  alwaysShowBrilliantMove = !!data.alwaysShowBrilliantMove;
+});
 socket.on("notice", t => {
   toast(t);
   const screen = document.querySelector(".screen.active")?.id;
@@ -1037,3 +1317,4 @@ socket.on("notice", t => {
 /* ------------------------------------------------------------------ boot */
 setupUI();
 refreshMe();
+loadPublicSettings();
