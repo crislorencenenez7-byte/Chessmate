@@ -897,3 +897,27 @@ h2 {
     gap: 5px;
   }
 }
+
+
+/* ChessMate move classification markers */
+.notation .mv {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notation .move-class {
+  display: inline-block;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.notation .mc-brilliant { color: #27c8b5; }
+.notation .mc-great { color: #55a9ee; }
+.notation .mc-best { color: #79c56a; }
+.notation .mc-excellent { color: #9bcf70; }
+.notation .mc-good { color: #aab5c2; }
+.notation .mc-inaccuracy { color: #e5c65b; }
+.notation .mc-mistake { color: #e99a4b; }
+.notation .mc-blunder { color: #e36b70; }

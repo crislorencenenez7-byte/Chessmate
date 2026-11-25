@@ -405,17 +405,34 @@ function removePlayer(room, player) {
 }
 
 io.on("connection", socket => {
-  socket.on("authenticate", async token => {
+  socket.on("authenticate", async (token, callback) => {
+    const reply = data => {
+      if (typeof callback === "function") callback(data);
+    };
+
     try {
+      if (typeof token !== "string" || !token) {
+        socketUsers.delete(socket.id);
+        reply({ ok: false, error: "Please log in again." });
+        return;
+      }
+
       const payload = jwt.verify(token, SECRET);
       const result = await pool.query(
         "SELECT * FROM users WHERE id=$1",
         [payload.id]
       );
       const u = result.rows[0];
-      if (!u) return;
 
-      socketUsers.set(socket.id, publicUser(u));
+      if (!u) {
+        socketUsers.delete(socket.id);
+        reply({ ok: false, error: "Account not found. Please log in again." });
+        return;
+      }
+
+      const safeUser = publicUser(u);
+      socketUsers.set(socket.id, safeUser);
+      reply({ ok: true, user: safeUser });
 
       // Resume a game that was interrupted by a dropped connection.
       for (const room of rooms.values()) {
@@ -430,7 +447,9 @@ io.on("connection", socket => {
         socket.to(room.code).emit("opponent-back");
       }
     } catch (error) {
+      socketUsers.delete(socket.id);
       console.error("Socket authentication error:", error.message);
+      reply({ ok: false, error: "Socket authentication failed. Please log in again." });
     }
   });
 
@@ -518,6 +537,11 @@ io.on("connection", socket => {
   socket.on("ranked-queue", () => {
     const u = getUser(socket);
     if (!u) return socket.emit("notice", "Log in first to play ranked.");
+    // Remove queue entries whose sockets have already disconnected.
+    for (let i = waiting.length - 1; i >= 0; i--) {
+      if (!io.sockets.sockets.has(waiting[i].id)) waiting.splice(i, 1);
+    }
+
     if (waiting.some(x => x.id === socket.id || x.user.id === u.id)) return;
 
     const idx = waiting.findIndex(

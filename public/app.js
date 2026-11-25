@@ -12,7 +12,7 @@ const BACKEND_URL = (window.CHESSMATE_API_URL || "").replace(/\/$/, "");
 const ONLINE_ENABLED = !!BACKEND_URL || !location.hostname.endsWith("github.io");
 const socket = typeof window.io === "function"
   ? window.io(BACKEND_URL || undefined)
-  : { connected: false, on() {}, emit() {} };
+  : { connected: false, on() {}, once() {}, emit() {} };
 const engine = new Engine();
 
 let token = store("cm_token") || "";
@@ -67,6 +67,44 @@ function setUser(u) {
   $("rank-tier").textContent = u ? tier(u.rating) : "—";
   if (token && socket.connected) socket.emit("authenticate", token);
 }
+
+async function ensureSocketAuth() {
+  if (!token) return false;
+  if (typeof socket.once !== "function") return false;
+
+  if (!socket.connected) {
+    const connected = await new Promise(resolve => {
+      let settled = false;
+      const finish = value => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      };
+      const timer = setTimeout(() => finish(false), 10000);
+      socket.once("connect", () => finish(true));
+      socket.once("connect_error", () => finish(false));
+    });
+
+    if (!connected || !socket.connected) return false;
+  }
+
+  return await new Promise(resolve => {
+    let settled = false;
+    const finish = value => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish(false), 10000);
+
+    socket.emit("authenticate", token, response => {
+      finish(response?.ok === true);
+    });
+  });
+}
+
 async function refreshMe() {
   if (!token) return;
   try { setUser((await api("/api/me")).user); }
@@ -214,6 +252,7 @@ async function analyzePly(i) {
   } catch { return; }
   if (G !== g) return;
   renderBadge();
+  renderNotation();
   refreshEval();
 }
 
@@ -376,7 +415,12 @@ function renderNotation() {
   let html = "";
   G.plies.forEach((p, i) => {
     if (i % 2 === 0) html += `<span class="no">${i / 2 + 1}.</span>`;
-    html += `<button class="mv${G.view === i + 1 ? " cur" : ""}" data-ply="${i + 1}">${escapeHtml(p.san)}</button>`;
+    const classification = p.cls && CLASSES[p.cls.key];
+    const marker = classification
+      ? `<span class="move-class mc-${escapeHtml(p.cls.key)}" aria-label="${escapeHtml(classification.label)}">${escapeHtml(classification.glyph)}</span>`
+      : "";
+    const title = classification ? `${p.san} — ${classification.label}` : p.san;
+    html += `<button class="mv${G.view === i + 1 ? " cur" : ""}" data-ply="${i + 1}" title="${escapeHtml(title)}">${escapeHtml(p.san)}${marker}</button>`;
   });
   if (G.over && !G.over.pendingServer) html += `<span class="res-tag">${tag(G.over.result)}</span>`;
   el.innerHTML = html;
@@ -677,15 +721,60 @@ function setupUI() {
   $("auth-pass").addEventListener("keydown", e => { if (e.key === "Enter") $("auth-submit").click(); });
 
   // friends
-  $("create-room").onclick = () => { if (!token) return toast("Log in first."); socket.emit("create-room"); };
-  $("join-room").onclick = () => { if (!token) return toast("Log in first."); socket.emit("join-room", $("join-code").value); };
+  $("create-room").onclick = async () => {
+    if (!token) return toast("Log in first.");
+    const button = $("create-room");
+    button.disabled = true;
+    $("friends-status").textContent = "Connecting securely…";
+    const ready = await ensureSocketAuth();
+    button.disabled = false;
+    if (!ready) {
+      $("friends-status").textContent = "Connection failed. Check your internet and log in again.";
+      return;
+    }
+    $("friends-status").textContent = "Creating private room…";
+    socket.emit("create-room");
+  };
+
+  $("join-room").onclick = async () => {
+    if (!token) return toast("Log in first.");
+    const code = $("join-code").value.trim().toUpperCase();
+    if (!code) {
+      $("friends-status").textContent = "Enter a room code first.";
+      return;
+    }
+    const button = $("join-room");
+    button.disabled = true;
+    $("friends-status").textContent = "Connecting securely…";
+    const ready = await ensureSocketAuth();
+    button.disabled = false;
+    if (!ready) {
+      $("friends-status").textContent = "Connection failed. Check your internet and log in again.";
+      return;
+    }
+    $("friends-status").textContent = "Joining room…";
+    socket.emit("join-room", code);
+  };
+
   $("copy-code").onclick = () => navigator.clipboard?.writeText($("room-code").textContent).then(() => toast("Room code copied."));
 
   // ranked
-  $("find-match").onclick = () => {
+  $("find-match").onclick = async () => {
     if (!token) return toast("Log in to play ranked.");
+    const button = $("find-match");
+    button.disabled = true;
+    $("rank-status").textContent = "Connecting securely…";
+    const ready = await ensureSocketAuth();
+    button.disabled = false;
+
+    if (!ready) {
+      $("rank-status").textContent = "Connection failed. Check your internet and log in again.";
+      return;
+    }
+
     $("rank-status").textContent = "Searching for an opponent…";
-    $("find-match").classList.add("hidden"); $("cancel-match").classList.remove("hidden");
+    button.classList.add("hidden");
+    $("cancel-match").classList.remove("hidden");
     socket.emit("ranked-queue");
   };
   $("cancel-match").onclick = () => {
@@ -727,7 +816,25 @@ async function loadHistory() {
 }
 
 /* ------------------------------------------------------------------ sockets */
-socket.on("connect", () => { if (token) socket.emit("authenticate", token); });
+socket.on("connect", () => {
+  if (token) socket.emit("authenticate", token);
+});
+
+socket.on("connect_error", () => {
+  const screen = document.querySelector(".screen.active")?.id;
+  if (screen === "ranked") $("rank-status").textContent = "Server connection failed. Please try again.";
+  if (screen === "friends") $("friends-status").textContent = "Server connection failed. Please try again.";
+});
+
+socket.on("disconnect", () => {
+  const screen = document.querySelector(".screen.active")?.id;
+  if (screen === "ranked") {
+    $("rank-status").textContent = "Disconnected. Reconnect and search again.";
+    $("find-match").classList.remove("hidden");
+    $("cancel-match").classList.add("hidden");
+  }
+  if (screen === "friends") $("friends-status").textContent = "Disconnected from server.";
+});
 
 socket.on("room-created", d => {
   pendingRoom = d.code;
