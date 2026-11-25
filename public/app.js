@@ -75,15 +75,18 @@ async function ensureSocketAuth() {
   if (!socket.connected) {
     const connected = await new Promise(resolve => {
       let settled = false;
-      const finish = value => {
+      const onConnect = () => finish(true);
+      const timer = setTimeout(() => finish(false), 25000);
+
+      function finish(value) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
+        socket.off("connect", onConnect);
         resolve(value);
-      };
-      const timer = setTimeout(() => finish(false), 10000);
-      socket.once("connect", () => finish(true));
-      socket.once("connect_error", () => finish(false));
+      }
+
+      socket.once("connect", onConnect);
     });
 
     if (!connected || !socket.connected) return false;
@@ -91,13 +94,14 @@ async function ensureSocketAuth() {
 
   return await new Promise(resolve => {
     let settled = false;
-    const finish = value => {
+    const timer = setTimeout(() => finish(false), 15000);
+
+    function finish(value) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
       resolve(value);
-    };
-    const timer = setTimeout(() => finish(false), 10000);
+    }
 
     socket.emit("authenticate", token, response => {
       finish(response?.ok === true);
