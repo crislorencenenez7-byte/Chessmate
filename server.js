@@ -29,7 +29,8 @@ if (fs.existsSync(envFile)) {
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || "").trim();
+const io = new Server(server, { cors: { origin: FRONTEND_ORIGIN || "*" } });
 
 const dataDir = path.join(__dirname, "data");
 fs.mkdirSync(dataDir, { recursive: true });
@@ -65,6 +66,20 @@ CREATE TABLE IF NOT EXISTS matches (
  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 `);
+
+// Allow an explicitly configured static frontend (for example GitHub Pages).
+// Local same-origin Termux use does not need any CORS configuration.
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && FRONTEND_ORIGIN && origin === FRONTEND_ORIGIN) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  }
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));

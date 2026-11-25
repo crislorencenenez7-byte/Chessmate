@@ -8,7 +8,11 @@ const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const PIECE_NAME = { k: "king", q: "queen", r: "rook", b: "bishop", n: "knight", p: "pawn" };
 const MODE_TITLE = { local: "Two Players", ai: "Play vs Computer", analysis: "Analysis Board", friends: "Friend Match", ranked: "Ranked Match" };
 
-const socket = io();
+const BACKEND_URL = (window.CHESSMATE_API_URL || "").replace(/\/$/, "");
+const ONLINE_ENABLED = !!BACKEND_URL || !location.hostname.endsWith("github.io");
+const socket = typeof window.io === "function"
+  ? window.io(BACKEND_URL || undefined)
+  : { connected: false, on() {}, emit() {} };
 const engine = new Engine();
 
 let token = store("cm_token") || "";
@@ -47,7 +51,7 @@ function tier(r) {
   return r < 600 ? "Beginner" : r < 800 ? "Bronze" : r < 1000 ? "Silver" : r < 1200 ? "Gold" : r < 1400 ? "Platinum" : r < 1600 ? "Diamond" : r < 2000 ? "Master" : "Grandmaster";
 }
 async function api(url, opts = {}) {
-  const r = await fetch(url, {
+  const r = await fetch(BACKEND_URL + url, {
     ...opts,
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}), ...(opts.headers || {}) }
   });
@@ -264,8 +268,9 @@ function maybeAi() {
   const g = G, fen = G.live.fen();
   g.aiBusy = true;
   const think = engine.state === "failed" ? Promise.reject(new Error("no engine")) : engine.playMove(fen, g.level);
-  think
-    .then(uci => uci)
+  const pause = new Promise(r => setTimeout(r, 350));
+  Promise.all([think, pause])
+    .then(([uci]) => uci)
     .catch(() => {
       // Engine unavailable: fall back to a random legal move so the game can continue.
       const moves = new Chess(fen).moves({ verbose: true });
@@ -284,7 +289,7 @@ function coordsOf(sq) {
   const f = FILES.indexOf(sq[0]), r = Number(sq[1]) - 1;
   return G.orient === "w" ? [f, 7 - r] : [7 - f, r];
 }
-function pieceSrc(p) { return `/pieces/${p.color}${p.type.toUpperCase()}.svg`; }
+function pieceSrc(p) { return `./pieces/${p.color}${p.type.toUpperCase()}.svg`; }
 
 function render() {
   if (!G) return;
@@ -459,7 +464,7 @@ function renderPromo() {
   const color = viewChess().turn();
   const el = $("promo");
   el.innerHTML = ["q", "r", "b", "n"].map(t =>
-    `<button data-p="${t}" aria-label="Promote to ${PIECE_NAME[t]}"><img src="pieces/${color}${t.toUpperCase()}.svg" alt=""></button>`).join("");
+    `<button data-p="${t}" aria-label="Promote to ${PIECE_NAME[t]}"><img src="./pieces/${color}${t.toUpperCase()}.svg" alt=""></button>`).join("");
   const s = $("board").clientWidth / 8;
   const [c, r] = coordsOf(to);
   el.style.left = c * s + "px";
@@ -603,15 +608,16 @@ function setupUI() {
   // hero decoration (SVG pieces, no Unicode glyphs)
   const hero = ["", "bK", "", "bR", "bP", "bP", "", "", "", "wN", "wQ", "", "wP", "wK", "", "wR"];
   $("hero-board").innerHTML = hero.map((p, i) =>
-    `<div style="background:${((i % 4) + Math.floor(i / 4)) % 2 ? "var(--dark)" : "var(--light)"}">${p ? `<img src="pieces/${p}.svg" alt="">` : ""}</div>`).join("");
+    `<div style="background:${((i % 4) + Math.floor(i / 4)) % 2 ? "var(--dark)" : "var(--light)"}">${p ? `<img src="./pieces/${p}.svg" alt="">` : ""}</div>`).join("");
 
   document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => {
     const m = b.dataset.mode;
-    if (m === "friends") { $("friends-status").textContent = ""; show("friends"); }
-    else if (m === "ranked") show("ranked");
+    if (m === "friends") { if (!ONLINE_ENABLED) return toast("Online play needs a hosted ChessMate backend. Local games still work."); $("friends-status").textContent = ""; show("friends"); }
+    else if (m === "ranked") { if (!ONLINE_ENABLED) return toast("Ranked play needs a hosted ChessMate backend."); show("ranked"); }
     else if (m === "ai") show("ai-setup");
-    else if (m === "leaderboard") { loadLeaderboard(); show("leaderboard"); }
+    else if (m === "leaderboard") { if (!ONLINE_ENABLED) return toast("Leaderboard needs a hosted ChessMate backend."); loadLeaderboard(); show("leaderboard"); }
     else if (m === "history") {
+      if (!ONLINE_ENABLED) return toast("Match history needs a hosted ChessMate backend.");
       if (!token) { toast("Log in to see your match history."); authMode = "login"; updateAuth(); show("auth"); return; }
       loadHistory(); show("history");
     }

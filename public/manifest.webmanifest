@@ -1,0 +1,14 @@
+{
+  "id": "./",
+  "name": "ChessMate 2.0",
+  "short_name": "ChessMate",
+  "description": "Play chess and analyse moves with Stockfish.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1216",
+  "theme_color": "#0f1216",
+  "icons": [
+    { "src": "./pieces/wK.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

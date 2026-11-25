@@ -1,5 +1,5 @@
 // Stockfish (WASM, single-thread "lite" build) running in a Web Worker.
-// Everything is served from /engine, so no CDN or special HTTP headers are needed.
+// Resolve the worker relative to this module so both / and GitHub Pages subpaths work.
 // All jobs run one at a time through a FIFO queue; analysis results are cached by FEN.
 
 const ENGINE_URL = new URL("../engine/stockfish-19-lite-single.js", import.meta.url);
@@ -13,7 +13,7 @@ export const LEVELS = [
   { id: 4, name: "Master",       opts: { limit: false, skill: 20 }, go: "depth 14 movetime 900" }
 ];
 
-const ANALYSIS = { depth: 10, multipv: 1, movetime: 450 };
+const ANALYSIS = { depth: 13, multipv: 2, movetime: 2200 };
 
 export class Engine {
   constructor() {
@@ -100,8 +100,7 @@ export class Engine {
   }
 
   _enqueue(job) {
-    if (job.priority) this.queue.unshift(job);
-    else this.queue.push(job);
+    this.queue.push(job);
     this._pump();
   }
 
@@ -184,7 +183,6 @@ export class Engine {
     if (this.state === "failed") return Promise.reject(new Error("Engine unavailable"));
     return new Promise((resolve, reject) => {
       this._enqueue({
-        priority: true,
         limitMs: mt,
         fail: reject,
         start: () => {
