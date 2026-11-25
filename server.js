@@ -32,7 +32,7 @@ const server = http.createServer(app);
 const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || "").trim();
 const io = new Server(server, { cors: { origin: FRONTEND_ORIGIN || "*" } });
 
-const dataDir = path.join(__dirname, "data");
+const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new DatabaseSync(path.join(dataDir, "chessmate.db"));
