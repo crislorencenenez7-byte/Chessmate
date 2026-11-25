@@ -20,7 +20,15 @@ let user = null;
 let authMode = "login";
 let G = null;          // the current game (null when no game screen is active)
 let gameSeq = 0;
-let aiSetup = { level: Number(store("cm_ailevel") ?? 2), color: "w" };
+const BOT_PROFILES = [
+  { id: "stockfish", name: "Stockfish 19 Lite", rating: "3000+", elo: 3000, level: 4, style: "Engine • strongest local analysis", voice: "I will calculate the position carefully." },
+  { id: "fischer", name: "Bobby Fischer", rating: "2800+", elo: 2800, level: 4, style: "Named Stockfish-powered challenge profile", voice: "A classical chess challenge. Look for active pieces." },
+  { id: "mittens", name: "Mittens", rating: "2200+", elo: 2200, level: 3, style: "Mittens-inspired Stockfish challenge profile", voice: "Meow. I have a tricky move ready." },
+  { id: "master", name: "Grandmaster", rating: "2400+", elo: 2400, level: 3, style: "Strong positional play", voice: "I will test your positional understanding." },
+  { id: "club", name: "Club Player", rating: "1600", elo: 1600, level: 2, style: "Balanced club-level challenge", voice: "Let's play a balanced game." },
+  { id: "beginner", name: "Beginner", rating: "800", elo: 800, level: 0, style: "Relaxed learning game", voice: "Take your time and develop your pieces." }
+];
+let aiSetup = { level: Number(store("cm_ailevel") ?? 2), color: "w", bot: store("cm_bot") || "club", voice: store("cm_coach_voice") !== "off" };
 let pendingRoom = null;
 
 function store(k, v) {
@@ -152,8 +160,9 @@ function newGame(mode, o = {}) {
     id: ++gameSeq, mode,
     startFen: START, plies: [], view: 0, live: new Chess(),
     orient: o.orient || "w", myColor: o.myColor || null,
-    level: o.level ?? 2, roomCode: o.roomCode || null,
+    level: o.level ?? 2, bot: o.bot || null, roomCode: o.roomCode || null,
     names: o.names, over: null, sel: null, promoPending: null, drag: null,
+    premove: null, coachMessage: "I will review your moves as we play.", reviewOpen: false,
     aiBusy: false, lastEval: null, anim: null
   };
   $("game-title").textContent = MODE_TITLE[mode] || "Chess";
@@ -196,6 +205,38 @@ function canMoveNow() {
   return true;
 }
 
+function canQueuePremove() {
+  return !!G && ["ai", "friends", "ranked"].includes(G.mode) && !G.over &&
+    G.view === G.plies.length && G.live.turn() !== G.myColor;
+}
+
+function queuePremove(from, to) {
+  if (!canQueuePremove()) return false;
+  const piece = G.live.get(from);
+  if (!piece || piece.color !== G.myColor) return false;
+  G.premove = { from, to };
+  G.sel = null;
+  G.coachMessage = `Premove queued: ${from} → ${to}. It will play if legal on your turn.`;
+  render();
+  renderCoach();
+  return true;
+}
+
+function playQueuedPremove() {
+  if (!G || !G.premove || !["ai", "friends", "ranked"].includes(G.mode) ||
+      G.live.turn() !== G.myColor || G.over) return;
+  const move = G.premove;
+  G.premove = null;
+  const legal = G.live.moves({ square: move.from, verbose: true }).find(m => m.to === move.to);
+  if (!legal) {
+    G.coachMessage = "Your premove was no longer legal, so it was cancelled.";
+    renderCoach();
+    toast("Premove cancelled: the move is no longer legal.");
+    return;
+  }
+  applyMove({ from: move.from, to: move.to, promotion: legal.promotion || "q" }, { user: true });
+}
+
 // Plays a move on the board. o.user: made by the local player. o.remote: from the server/engine.
 function applyMove(m, o = {}) {
   let atLive = G.view === G.plies.length;
@@ -217,6 +258,7 @@ function applyMove(m, o = {}) {
   };
   G.plies.push(ply);
   G.sel = null; G.promoPending = null;
+  if (o.user) G.premove = null;
   $("promo").classList.add("hidden");
   if (atLive) { G.view = G.plies.length; G.vc = null; G.anim = o.noAnim ? null : { from: made.from, to: made.to }; }
 
@@ -232,8 +274,46 @@ function applyMove(m, o = {}) {
   }
   render();
   if (!o.skipAnalysis) analyzePly(G.plies.length - 1);
+  if (!o.suppressPremove && ["ai", "friends", "ranked"].includes(G.mode) && G.live.turn() === G.myColor && G.premove) {
+    queueMicrotask(playQueuedPremove);
+  }
   maybeAi();
   return ply;
+}
+
+/* ------------------------------------------------------------------ AI coach */
+function renderCoach() {
+  const panel = $("coach-message");
+  if (panel && G) panel.textContent = G.coachMessage || "Keep developing your pieces.";
+}
+
+function coachSpeak(message) {
+  if (!G || G.mode !== "ai") return;
+  G.coachMessage = message;
+  renderCoach();
+  if (!aiSetup.voice || !("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 1;
+    utterance.pitch = G.bot === "mittens" ? 1.15 : 1;
+    window.speechSynthesis.speak(utterance);
+  } catch {}
+}
+
+function coachFeedback(ply) {
+  if (!G || G.mode !== "ai" || ply.color !== G.myColor || !ply.cls) return;
+  const messages = {
+    brilliant: "Brilliant move! You found a strong tactical idea. Keep checking forcing moves.",
+    great: "Great move. You found a very important move in this position.",
+    best: "Best move. This is the engine's top choice.",
+    excellent: "Excellent move. You kept the position under control.",
+    good: "Good move. Look for ways to improve your piece activity.",
+    inaccuracy: "That move is an inaccuracy. Compare it with the engine's suggested move.",
+    mistake: "That is a mistake. Before moving, check your opponent's threats and loose pieces.",
+    blunder: "That is a blunder. Pause and look for checks, captures, and threats before your next move."
+  };
+  coachSpeak(messages[ply.cls.key] || "Let's review this position together.");
 }
 
 /* ------------------------------------------------------------------ engine analysis */
@@ -252,7 +332,11 @@ async function analyzePly(i) {
       prev: i > 0 ? g.plies[i - 1] : null,
       terminal: term ? term.kind : null
     });
-    if (r) ply.cls = r;
+    if (r) {
+      ply.cls = r;
+      if (!ply.seen && g.mode === "ai" && ply.color === g.myColor) coachFeedback(ply);
+      ply.seen = true;
+    }
   } catch { return; }
   if (G !== g) return;
   renderBadge();
@@ -310,6 +394,10 @@ function maybeAi() {
   if (G.live.turn() === G.myColor) return;
   const g = G, fen = G.live.fen();
   g.aiBusy = true;
+  if (g.bot === "mittens") {
+    g.coachMessage = "Mittens is thinking… watch out for a tricky reply.";
+    renderCoach();
+  }
   const think = engine.state === "failed" ? Promise.reject(new Error("no engine")) : engine.playMove(fen, g.level);
   const pause = new Promise(r => setTimeout(r, 350));
   Promise.all([think, pause])
@@ -392,6 +480,8 @@ function render() {
   renderBadge();
   renderNotation();
   updateStatus();
+  renderCoach();
+  $("premove-cancel")?.classList.toggle("hidden", !G.premove);
 }
 
 // Classification badge: top-right corner of the piece that just moved, only once analysed.
@@ -445,6 +535,7 @@ function updateStatus() {
     txt = G.myColor ? (t === G.myColor ? "Your move" : "Opponent's move") : (t === "w" ? "White to move" : "Black to move");
     if (vc.inCheck() && !vc.isCheckmate()) txt += " · Check";
   }
+  if (G.premove) txt += ` · Premove ${G.premove.from}→${G.premove.to} queued`;
   $("game-subtitle").textContent = txt;
   $("resign").classList.toggle("hidden", !["ai", "friends", "ranked"].includes(G.mode) || !!G.over);
   const turn = G.over ? null : vc.turn();
@@ -493,7 +584,7 @@ function sqFromPoint(x, y) {
 }
 
 function tryMove(from, to, o = {}) {
-  if (!canMoveNow()) return false;
+  if (!canMoveNow()) return queuePremove(from, to);
   const legal = viewChess().moves({ square: from, verbose: true }).filter(m => m.to === to);
   if (!legal.length) return false;
   if (legal.some(m => m.promotion)) {
@@ -530,14 +621,19 @@ function setupBoardInput() {
     if (!sq) return;
     const vc = viewChess();
     const movable = canMoveNow();
+    const premoving = canQueuePremove();
 
-    // tap a highlighted destination to move the selected piece there
-    if (movable && G.sel && G.sel !== sq && vc.moves({ square: G.sel, verbose: true }).some(m => m.to === sq)) {
+    // tap a selected destination to move now or queue a premove
+    if ((movable || premoving) && G.sel && G.sel !== sq &&
+        (movable
+          ? vc.moves({ square: G.sel, verbose: true }).some(m => m.to === sq)
+          : vc.get(sq)?.color !== G.myColor)) {
       if (!tryMove(G.sel, sq)) { G.sel = null; render(); }
       return;
     }
     const p = vc.get(sq);
-    if (movable && p && p.color === vc.turn()) {
+    if ((movable && p && p.color === vc.turn()) ||
+        (premoving && p && p.color === G.myColor)) {
       const wasSelected = G.sel === sq;
       G.sel = sq;
       G.drag = { from: sq, x: e.clientX, y: e.clientY, moved: false, id: e.pointerId, src: pieceSrc(p), wasSelected };
@@ -622,10 +718,14 @@ function startLocal(mode) {
 
 function startAi() {
   const color = aiSetup.color === "r" ? (Math.random() < 0.5 ? "w" : "b") : aiSetup.color;
-  const lvl = LEVELS[aiSetup.level];
-  const me = { name: user?.username || "You", sub: user ? `${user.rating}` : "" };
-  const cpu = { name: "ChessMate AI", sub: lvl.name };
-  newGame("ai", { orient: color, myColor: color, level: aiSetup.level, names: color === "w" ? { w: me, b: cpu } : { w: cpu, b: me } });
+  const bot = BOT_PROFILES.find(x => x.id === aiSetup.bot) || BOT_PROFILES[4];
+  aiSetup.level = bot.level;
+  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player" };
+  const cpu = { name: bot.name, sub: `${bot.rating} challenge rating` };
+  const game = newGame("ai", { orient: color, myColor: color, level: bot.level, bot: bot.id, names: color === "w" ? { w: me, b: cpu } : { w: cpu, b: me } });
+  game.coachMessage = `${bot.name}: ${bot.voice}`;
+  renderCoach();
+  if (aiSetup.voice) coachSpeak(game.coachMessage);
 }
 
 function startOnline(kind, code, players, myName) {
@@ -638,7 +738,7 @@ function startOnline(kind, code, players, myName) {
 }
 
 function replayMoves(moves) {
-  moves.forEach((m, i) => applyMove(m, { remote: true, noAnim: true, skipAnalysis: i < moves.length - 3 }));
+  moves.forEach((m, i) => applyMove(m, { remote: true, noAnim: true, suppressPremove: true, skipAnalysis: i < moves.length - 3 }));
 }
 
 function syncFromServer(d) {
@@ -649,6 +749,22 @@ function syncFromServer(d) {
   G.plies.forEach((p, i) => { if (old[i] && old[i].uci === p.uci && old[i].cls) { p.cls = old[i].cls; p.seen = true; } });
   render();
   refreshEval();
+}
+
+function openGameReview() {
+  if (!G) return;
+  const list = $("review-list");
+  list.innerHTML = G.plies.map((p, i) => {
+    const label = p.cls ? CLASSES[p.cls.key]?.label || p.cls.key : "Not analyzed";
+    const glyph = p.cls ? CLASSES[p.cls.key]?.glyph || "" : "";
+    return `<div class="review-row"><span>${Math.floor(i / 2) + 1}${p.color === "w" ? "." : "..."}</span><b>${escapeHtml(p.san)}</b><strong>${escapeHtml(label)} ${escapeHtml(glyph)}</strong></div>`;
+  }).join("") || "<p>No moves to review yet.</p>";
+  $("review-panel").hidden = false;
+  $("review-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeGameReview() {
+  $("review-panel").hidden = true;
 }
 
 /* ------------------------------------------------------------------ wire up UI */
@@ -691,15 +807,38 @@ function setupUI() {
       render(); showResult();
     }
   };
-  $("result-review").onclick = () => $("overlay").classList.add("hidden");
+  $("result-review").onclick = () => {
+    $("overlay").classList.add("hidden");
+    openGameReview();
+  };
   $("result-menu").onclick = goHome;
+  $("review-close").onclick = closeGameReview;
+  $("review-open").onclick = openGameReview;
+  $("premove-cancel").onclick = () => {
+    if (G) { G.premove = null; G.coachMessage = "Premove cancelled."; render(); toast("Premove cancelled."); }
+  };
 
-  // computer setup
-  $("ai-level").innerHTML = LEVELS.map(l => `<button data-v="${l.id}" class="${l.id === aiSetup.level ? "on" : ""}">${l.name}</button>`).join("");
-  $("ai-level").onclick = e => {
-    const b = e.target.closest("button"); if (!b) return;
-    aiSetup.level = Number(b.dataset.v); store("cm_ailevel", String(aiSetup.level));
-    [...$("ai-level").children].forEach(x => x.classList.toggle("on", x === b));
+  // Computer roster: local Stockfish-powered challenge profiles.
+  $("bot-roster").innerHTML = BOT_PROFILES.map(bot =>
+    `<button type="button" class="bot-card ${bot.id === aiSetup.bot ? "on" : ""}" data-bot="${bot.id}">
+      <span class="bot-name">${escapeHtml(bot.name)}</span>
+      <b>Challenge Elo ${escapeHtml(bot.rating)}</b>
+      <small>${escapeHtml(bot.style)}</small>
+    </button>`).join("");
+  $("bot-roster").onclick = e => {
+    const b = e.target.closest("[data-bot]"); if (!b) return;
+    aiSetup.bot = b.dataset.bot;
+    const bot = BOT_PROFILES.find(x => x.id === aiSetup.bot);
+    aiSetup.level = bot.level;
+    store("cm_bot", aiSetup.bot);
+    store("cm_ailevel", String(aiSetup.level));
+    [...$("bot-roster").children].forEach(x => x.classList.toggle("on", x === b));
+  };
+  $("coach-voice").checked = aiSetup.voice;
+  $("coach-voice").onchange = () => {
+    aiSetup.voice = $("coach-voice").checked;
+    store("cm_coach_voice", aiSetup.voice ? "on" : "off");
+    if (!aiSetup.voice && "speechSynthesis" in window) speechSynthesis.cancel();
   };
   $("ai-color").onclick = e => {
     const b = e.target.closest("button"); if (!b) return;

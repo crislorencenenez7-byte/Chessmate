@@ -1,4 +1,4 @@
-const CACHE = 'chessmate-shell-v5';
+const CACHE = 'chessmate-shell-v6';
 
 const CORE = [
   './',
@@ -25,8 +25,8 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE)
       .then(cache => cache.addAll(CORE))
-      // One-time scheduler setup activation.
-      .then(() => self.skipWaiting())
+      // Existing installations keep the old worker until the scheduled release.
+      .then(() => true)
   );
 });
 

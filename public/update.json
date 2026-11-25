@@ -1,8 +1,13 @@
 {
-  "enabled": false,
-  "scheduledAt": null,
-  "date": "",
+  "enabled": true,
+  "scheduledAt": "2026-11-25T15:05:51.015Z",
+  "date": "Nov 25, 2026, 11:05 PM (Philippines time)",
   "title": "ChessMate Scheduled Update",
-  "description": [],
-  "version": ""
+  "description": [
+    "New bot roster",
+    "Premove support",
+    "AI Coach voice feedback",
+    "Game Review"
+  ],
+  "version": "chessmate-1795619151015"
 }

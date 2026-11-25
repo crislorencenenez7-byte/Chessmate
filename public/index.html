@@ -25,10 +25,10 @@
 <section id="update-banner" class="update-banner" hidden aria-live="polite">
   <div class="update-banner-top">
     <strong id="update-title">ChessMate Scheduled Update</strong>
-    <span id="update-countdown">00:00:00</span>
+    <span class="update-timer">Timer: <b id="update-countdown">35:00</b></span>
   </div>
   <p><strong>Date:</strong> <time id="update-date"></time></p>
-  <p id="update-description"></p>
+  <p><strong>Description:</strong> <span id="update-description"></span></p>
 </section>
 
 <main>
@@ -118,6 +118,19 @@
         </div>
       </div>
     </div>
+    <div class="game-tools">
+      <button id="review-open" class="secondary small">Review Game</button>
+      <button id="premove-cancel" class="ghost small hidden">Cancel Premove</button>
+    </div>
+    <section id="coach-panel" class="coach-panel" aria-live="polite">
+      <div><strong>ChessMate AI Coach</strong><span>Move feedback</span></div>
+      <p id="coach-message">I will review your moves as we play.</p>
+    </section>
+    <section id="review-panel" class="review-panel" hidden>
+      <div class="review-heading"><h3>Game Review</h3><button id="review-close" class="ghost small">Close</button></div>
+      <p class="muted tiny">Move classifications are based on local Stockfish analysis. Some moves may still be analyzing.</p>
+      <div id="review-list"></div>
+    </section>
   </div>
 </section>
 
@@ -126,8 +139,10 @@
   <button class="ghost back">← Menu</button>
   <h2>Play vs Computer</h2>
   <div class="form-card">
-    <p class="eyebrow">STRENGTH</p>
-    <div class="seg" id="ai-level"></div>
+    <p class="eyebrow">CHOOSE YOUR OPPONENT</p>
+    <div id="bot-roster" class="bot-roster"></div>
+    <p class="muted tiny">These are Stockfish-powered challenge profiles, not the official original Mittens or a historically exact Bobby Fischer engine. Displayed Elo values are challenge labels, not verified FIDE ratings.</p>
+    <label class="coach-toggle"><input id="coach-voice" type="checkbox"> Speak move feedback aloud</label>
     <p class="eyebrow">YOUR COLOR</p>
     <div class="seg" id="ai-color">
       <button data-v="w" class="on"><img src="./pieces/wK.svg" alt="" width="22" height="22"> White</button>

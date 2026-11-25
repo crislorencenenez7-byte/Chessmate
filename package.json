@@ -6,7 +6,8 @@
   "main": "server-postgres.js",
   "scripts": {
     "start": "node server-postgres.js",
-    "dev": "node --watch server-postgres.js"
+    "dev": "node --watch server-postgres.js",
+    "schedule-update": "node scripts/schedule-update.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
