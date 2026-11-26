@@ -66,23 +66,9 @@
   }
 
   function showUpdate(config) {
-    if (!updateBanner || !releaseTime) return;
-
-    updateTitle.textContent =
-      config.title || 'ChessMate Scheduled Update';
-
-    updateDate.textContent = config.date ||
-      new Date(releaseTime).toLocaleString('en-PH');
-
-    const descriptions = Array.isArray(config.description)
-      ? config.description
-      : [config.description || 'ChessMate improvements'];
-
-    updateDescription.textContent = descriptions
-      .filter(Boolean)
-      .join(' • ');
-
-    updateBanner.hidden = false;
+    if (!updateBanner) return;
+    updateBanner.hidden = true;
+    updateBanner.style.display = "none";
   }
 
   function activateWaitingWorker() {
@@ -200,52 +186,5 @@
 
   }).catch(error => {
     console.error('ChessMate Service Worker registration failed:', error);
-  });
-})();
-
-// AUTO UPDATE BANNER VISIBILITY
-(() => {
-  const bannerSelectors = [
-    '#updateBanner',
-    '#update-banner',
-    '#updateCountdown',
-    '#update-countdown',
-    '.update-banner',
-    '.update-countdown',
-    '[data-update-banner]'
-  ];
-
-  async function refreshUpdateBanner() {
-    try {
-      const response = await fetch('./update.json?t=' + Date.now(), {
-        cache: 'no-store'
-      });
-
-      if (!response.ok) throw new Error('Update schedule unavailable');
-
-      const config = await response.json();
-      const scheduledAt = Date.parse(config.scheduledAt);
-
-      const active =
-        config.enabled === true &&
-        Number.isFinite(scheduledAt) &&
-        scheduledAt > Date.now();
-
-      document.querySelectorAll(bannerSelectors.join(',')).forEach(banner => {
-        banner.hidden = !active;
-        banner.style.display = active ? '' : 'none';
-      });
-    } catch (error) {
-      document.querySelectorAll(bannerSelectors.join(',')).forEach(banner => {
-        banner.hidden = true;
-        banner.style.display = 'none';
-      });
-    }
-  }
-
-  refreshUpdateBanner();
-  setInterval(refreshUpdateBanner, 15000);
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) refreshUpdateBanner();
   });
 })();
