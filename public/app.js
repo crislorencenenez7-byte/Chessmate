@@ -608,22 +608,66 @@ async function renderAdminCoach() {
   adminCoachPosition = positionKey;
   const requestId = ++adminCoachRequest;
 
-  hint.textContent = "Admin Coach: Analyzing best move...";
-  if (svg) svg.remove();
+  hint.textContent = "BRILLIANT MOVE COACH · Analyzing candidate moves...";
+  if (svg) {
+    svg.remove();
+    svg = null;
+  }
 
   try {
-    const analysis = await engine.analyze(fen);
-    if (requestId !== adminCoachRequest || !adminAuthenticated || !user?.isAdmin || !G || fenAt(G.view) !== fen) return;
+    const analysis = await engine.analyze(fen, {
+      depth: 14,
+      multipv: 5,
+      movetime: 2600
+    });
 
-    const best = analysis?.lines?.[0]?.move;
-    if (!best || best.length < 4) {
-      hint.textContent = "Admin Coach: No move recommendation available.";
+    if (
+      requestId !== adminCoachRequest ||
+      !adminAuthenticated ||
+      !user?.isAdmin ||
+      !G ||
+      fenAt(G.view) !== fen
+    ) return;
+
+    let brilliant = null;
+
+    for (const line of analysis?.lines || []) {
+      if (!line.move || line.move.length < 4) continue;
+
+      const from = line.move.slice(0, 2);
+      const to = line.move.slice(2, 4);
+      const promotion = line.move.length > 4 ? line.move[4] : undefined;
+
+      try {
+        const position = new Chess(fen);
+        const move = position.move({ from, to, promotion });
+
+        if (!move) continue;
+
+        const result = classifyMove({
+          before: analysis,
+          after: null,
+          move,
+          fenBefore: fen,
+          prev: null,
+          terminal: null
+        });
+
+        if (result?.key === "brilliant") {
+          brilliant = { from, to, result };
+          break;
+        }
+      } catch {}
+    }
+
+    if (!brilliant) {
+      hint.textContent = "BRILLIANT MOVE COACH · No qualifying Brilliant Move found in the current position.";
       return;
     }
 
-    const from = best.slice(0, 2);
-    const to = best.slice(2, 4);
-    hint.textContent = `ADMIN COACH · BEST MOVE: ${from.toUpperCase()} → ${to.toUpperCase()}`;
+    const { from, to, result } = brilliant;
+    hint.textContent =
+      `BRILLIANT MOVE · ${from.toUpperCase()} → ${to.toUpperCase()} · SACRIFICE ${result.sac.toFixed(1)} PAWNS`;
 
     const a = board.querySelector(`[data-sq="${from}"]`);
     const b = board.querySelector(`[data-sq="${to}"]`);
@@ -647,6 +691,7 @@ async function renderAdminCoach() {
     marker.setAttribute("refX", "6");
     marker.setAttribute("refY", "3");
     marker.setAttribute("orient", "auto");
+
     const tip = document.createElementNS("http://www.w3.org/2000/svg", "path");
     tip.setAttribute("d", "M0,0 L0,6 L6,3 z");
     tip.setAttribute("fill", "#20d878");
@@ -667,7 +712,7 @@ async function renderAdminCoach() {
     board.appendChild(svg);
   } catch (e) {
     if (requestId === adminCoachRequest && hint) {
-      hint.textContent = "Admin Coach: Analysis unavailable.";
+      hint.textContent = "BRILLIANT MOVE COACH · Analysis unavailable.";
     }
   }
 }
