@@ -52,10 +52,10 @@ async function initDb() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE"
   );
 
-  // Only the existing CrisLorence account receives Admin privileges.
+  // Preserve existing admins and ensure both designated admins stay Admin.
   await pool.query(
-    "UPDATE users SET is_admin = (username = $1)",
-    ["CrisLorence"]
+    "UPDATE users SET is_admin = TRUE WHERE LOWER(username) IN (LOWER($1), LOWER($2))",
+    ["CrisLorence", "josephsolo"]
   );
 
   const adminCheck = await pool.query(

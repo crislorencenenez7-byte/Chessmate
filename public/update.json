@@ -1,12 +1,12 @@
 {
   "enabled": true,
-  "scheduledAt": "2026-11-26T09:55:51.096Z",
-  "date": "Nov 26, 2026, 05:55 PM (Philippines time)",
+  "scheduledAt": "2026-11-26T10:10:23.369Z",
+  "date": "Nov 26, 2026, 06:10 PM (Philippines time)",
   "title": "ChessMate Update",
   "description": [
     "Performance Improvements",
     "Bug Fixes",
     "Latest ChessMate Features"
   ],
-  "version": "chessmate-1795686951096"
+  "version": "chessmate-1795687823369"
 }
