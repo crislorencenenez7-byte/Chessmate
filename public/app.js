@@ -46,10 +46,115 @@ function store(k, v) {
   return null;
 }
 
+/* ------------------------------------------------------------------ Raining Tacos event */
+function setTacoEventActive(active) {
+  window.__cmTacoEventActive = active === true;
+  syncTacoRainVisibility();
+}
+
+function ensureTacoRainLayer() {
+  let layer = document.getElementById("taco-rain-layer");
+  if (layer) return layer;
+
+  layer = document.createElement("div");
+  layer.id = "taco-rain-layer";
+  layer.setAttribute("aria-hidden", "true");
+
+  for (let i = 0; i < 24; i++) {
+    const taco = document.createElement("span");
+    taco.className = "taco-rain-item";
+    taco.textContent = "🌮";
+    taco.style.left = `${(i * 37 + 11) % 100}%`;
+    taco.style.animationDelay = `${(i % 8) * -0.8}s`;
+    taco.style.animationDuration = `${5 + (i % 5)}s`;
+    taco.style.fontSize = `${22 + (i % 4) * 7}px`;
+    layer.appendChild(taco);
+  }
+
+  document.body.appendChild(layer);
+  return layer;
+}
+
+function playTacoDropSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass || !window.__cmTacoAudioReady) return;
+
+  try {
+    const ctx = window.__cmTacoAudioContext || (window.__cmTacoAudioContext = new AudioContextClass());
+    if (ctx.state !== "running") return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(620, now);
+    osc.frequency.exponentialRampToValueAtTime(240, now + 0.18);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.23);
+  } catch {}
+}
+
+function syncTacoRainVisibility() {
+  const home = document.getElementById("home");
+  const onMainPage = !!home?.classList.contains("active");
+  const visible = window.__cmTacoEventActive === true &&
+    onMainPage &&
+    document.visibilityState !== "hidden";
+
+  const layer = ensureTacoRainLayer();
+  layer.hidden = !visible;
+
+  if (visible) {
+    if (!window.__cmTacoSoundTimer) {
+      playTacoDropSound();
+      window.__cmTacoSoundTimer = setInterval(playTacoDropSound, 1450);
+    }
+  } else if (window.__cmTacoSoundTimer) {
+    clearInterval(window.__cmTacoSoundTimer);
+    window.__cmTacoSoundTimer = null;
+  }
+}
+
+document.addEventListener("pointerdown", () => {
+  window.__cmTacoAudioReady = true;
+  if (window.__cmTacoEventActive) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      try {
+        const ctx = window.__cmTacoAudioContext || (window.__cmTacoAudioContext = new AudioContextClass());
+        ctx.resume().then(syncTacoRainVisibility).catch(() => {});
+      } catch {}
+    }
+  }
+}, { passive: true });
+
+document.addEventListener("visibilitychange", syncTacoRainVisibility);
+
+async function loadTacoEvent() {
+  try {
+    const data = await api("/api/event");
+    setTacoEventActive(data.active);
+    const status = document.getElementById("event-status");
+    if (status) status.textContent = data.active
+      ? "Raining Tacos is ACTIVE."
+      : "No event is currently active.";
+  } catch {
+    const status = document.getElementById("event-status");
+    if (status) status.textContent = "Could not load event status.";
+  }
+}
+
 /* ------------------------------------------------------------------ generic UI */
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   $(id).classList.add("active");
+  syncTacoRainVisibility();
   window.scrollTo(0, 0);
 }
 function toast(t) {
@@ -1108,6 +1213,7 @@ function setupUI() {
 
     try {
       await loadAdminSettings();
+      await loadTacoEvent();
       $("admin-panel").hidden = false;
       renderBadge();
     } catch (e) {
@@ -1136,6 +1242,34 @@ function setupUI() {
       button.disabled = false;
     }
   };
+
+  // Admin event controls
+  async function updateTacoEvent(active) {
+    const start = $("admin-start-event");
+    const end = $("admin-end-event");
+    start.disabled = true;
+    end.disabled = true;
+
+    try {
+      const result = await adminApi("/api/admin/event", {
+        method: "POST",
+        body: JSON.stringify({ active })
+      });
+      setTacoEventActive(result.active);
+      $("event-status").textContent = result.active
+        ? "Raining Tacos is ACTIVE."
+        : "Raining Tacos has ENDED.";
+      toast(result.active ? "Raining Tacos event started!" : "Raining Tacos event ended.");
+    } catch (error) {
+      $("event-status").textContent = error.message;
+    } finally {
+      start.disabled = false;
+      end.disabled = false;
+    }
+  }
+
+  $("admin-start-event").onclick = () => updateTacoEvent(true);
+  $("admin-end-event").onclick = () => updateTacoEvent(false);
 
   // auth
   $("auth-open").onclick = () => {
@@ -1318,6 +1452,11 @@ socket.on("opponent-left", () => { if (G && G.roomCode && !G.over) toast("Your o
 socket.on("opponent-back", () => toast("Your opponent reconnected."));
 socket.on("queue-status", t => { $("rank-status").textContent = t; });
 socket.on("global-announcement", showGlobalAnnouncement);
+socket.on("event-state", data => {
+  if (data?.event === "raining-tacos") {
+    setTacoEventActive(data.active === true);
+  }
+});
 socket.on("app-settings", data => {
   alwaysShowBrilliantMove = !!data.alwaysShowBrilliantMove;
 });
@@ -1332,3 +1471,4 @@ socket.on("notice", t => {
 setupUI();
 refreshMe();
 loadPublicSettings();
+loadTacoEvent();

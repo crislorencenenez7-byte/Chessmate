@@ -151,6 +151,43 @@ app.post("/api/admin/settings/brilliant-move", adminAuth, async (req, res) => {
   }
 });
 
+app.get("/api/event", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT value FROM app_settings WHERE key=$1",
+      ["raining_tacos_event"]
+    );
+    const value = result.rows[0]?.value || {};
+    res.json({ active: value.active === true, event: "raining-tacos" });
+  } catch (error) {
+    console.error("Event status error:", error.message);
+    res.status(500).json({ error: "Could not load event status." });
+  }
+});
+
+app.post("/api/admin/event", adminAuth, async (req, res) => {
+  const active = req.body.active;
+  if (typeof active !== "boolean") {
+    return res.status(400).json({ error: "active must be true or false." });
+  }
+
+  try {
+    const value = { active, event: "raining-tacos" };
+    await pool.query(
+      `INSERT INTO app_settings(key,value,updated_at)
+       VALUES($1,$2::jsonb,NOW())
+       ON CONFLICT(key) DO UPDATE
+       SET value=EXCLUDED.value, updated_at=NOW()`,
+      ["raining_tacos_event", JSON.stringify(value)]
+    );
+    io.emit("event-state", value);
+    res.json({ success: true, ...value });
+  } catch (error) {
+    console.error("Event update error:", error.message);
+    res.status(500).json({ error: "Could not update event." });
+  }
+});
+
 app.post("/api/admin/announcement", adminAuth, (req, res) => {
   const message = String(req.body.message || "").trim();
 
