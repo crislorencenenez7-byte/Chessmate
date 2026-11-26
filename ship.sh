@@ -39,7 +39,7 @@ print("Scheduled banner: disabled for this direct release")
 print("Future scheduling code: preserved")
 PY
 
-git add ship.sh public/style.css public/sw.js public/update.json
+git add ship.sh public/app.js public/index.html public/style.css public/sw.js public/update.json
 
 if git diff --cached --name-only | grep -Ei '(^|/)(\.env($|\.)|.*\.db$|.*\.sqlite3?$|.*backup.*|.*\.bak$|.*\.pem$|.*\.key$|id_rsa)'; then
   echo "ERROR: May sensitive o backup file. Push cancelled."

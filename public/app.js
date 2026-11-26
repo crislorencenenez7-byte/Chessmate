@@ -69,25 +69,46 @@ function playHomeUiSound() {
 
   try {
     homeAudioContext ||= new AudioContextClass();
-
     const ctx = homeAudioContext;
+
     const play = () => {
       const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+      // Original garden-inspired UI chime: soft, bright, and playful.
+      const notes = [
+        { frequency: 587.33, at: 0, duration: 0.15, volume: 0.032 },
+        { frequency: 739.99, at: 0.075, duration: 0.18, volume: 0.026 },
+        { frequency: 880.00, at: 0.15, duration: 0.22, volume: 0.022 }
+      ];
 
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(520, now);
-      osc.frequency.exponentialRampToValueAtTime(780, now + 0.075);
+      notes.forEach(note => {
+        const osc = ctx.createOscillator();
+        const shimmer = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const shimmerGain = ctx.createGain();
+        const begin = now + note.at;
 
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.035, now + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(note.frequency, begin);
+        shimmer.type = "sine";
+        shimmer.frequency.setValueAtTime(note.frequency * 2.01, begin);
 
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.13);
+        gain.gain.setValueAtTime(0.0001, begin);
+        gain.gain.exponentialRampToValueAtTime(note.volume, begin + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, begin + note.duration);
+
+        shimmerGain.gain.setValueAtTime(0.0001, begin);
+        shimmerGain.gain.exponentialRampToValueAtTime(note.volume * 0.16, begin + 0.018);
+        shimmerGain.gain.exponentialRampToValueAtTime(0.0001, begin + note.duration * 0.8);
+
+        osc.connect(gain);
+        shimmer.connect(shimmerGain);
+        gain.connect(ctx.destination);
+        shimmerGain.connect(ctx.destination);
+        osc.start(begin);
+        shimmer.start(begin);
+        osc.stop(begin + note.duration + 0.02);
+        shimmer.stop(begin + note.duration + 0.02);
+      });
     };
 
     if (ctx.state === "suspended") {
@@ -1487,6 +1508,44 @@ function setupUI() {
   };
   $("ai-start").onclick = startAi;
 
+  async function loadAdminReleaseStatus() {
+    const version = $("admin-release-version");
+    const status = $("admin-release-status");
+    const date = $("admin-release-date");
+    const note = $("admin-release-note");
+    const button = $("admin-refresh-release");
+
+    if (button) button.disabled = true;
+    if (note) note.textContent = "Checking published update configuration…";
+
+    try {
+      const response = await fetch("./update.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load update configuration.");
+      const config = await response.json();
+
+      if (version) version.textContent = config.version || "Version not set";
+      if (status) {
+        status.textContent = config.enabled && config.scheduledAt
+          ? "Scheduled"
+          : "No scheduled update";
+      }
+      if (date) {
+        date.textContent = config.enabled && config.scheduledAt
+          ? `Scheduled release: ${config.date || new Date(config.scheduledAt).toLocaleString()}`
+          : "No countdown is active. The Update Timer Banner remains available for future scheduled releases.";
+      }
+      if (note) {
+        note.textContent = "This panel is a release monitor. New site versions are published through the project deployment workflow.";
+      }
+    } catch (error) {
+      if (status) status.textContent = "Unavailable";
+      if (date) date.textContent = "Update configuration could not be checked.";
+      if (note) note.textContent = error.message;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
   // Admin dashboard: only the verified CrisLorence account can open it.
   $("admin-open").onclick = async () => {
     if (!user?.isAdmin || !token) {
@@ -1501,6 +1560,7 @@ function setupUI() {
     try {
       await loadAdminSettings();
       await loadTacoEvent();
+      await loadAdminReleaseStatus();
       $("admin-panel").hidden = false;
       renderBadge();
     } catch (e) {
@@ -1510,6 +1570,8 @@ function setupUI() {
       $("admin-error").textContent = e.message;
     }
   };
+
+  $("admin-refresh-release").onclick = loadAdminReleaseStatus;
 
   $("admin-send-announcement").onclick = async () => {
     const button = $("admin-send-announcement");

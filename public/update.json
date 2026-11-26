@@ -1,12 +1,13 @@
 {
   "enabled": false,
   "scheduledAt": null,
-  "date": "Nov 26, 2026, 10:29 PM (Philippines time)",
-  "title": "ChessMate Update",
+  "date": "",
+  "title": "ChessMate Premium Admin Upgrade",
   "description": [
-    "Performance Improvements",
-    "Bug Fixes",
-    "Latest ChessMate Features"
+    "Premium Admin Dashboard and Announcement UI",
+    "Garden-inspired home interaction sound",
+    "Raining Tacos event animation and original sound effects",
+    "Admin release status monitor"
   ],
-  "version": "chessmate-1795703369155"
+  "version": "chessmate-premium-admin-20261126"
 }

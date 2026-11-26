@@ -2068,3 +2068,67 @@ h2 {
 }
 
 /* END CHESSMATE PREMIUM ADMIN UI */
+
+
+/* Premium release monitor inside Admin Dashboard */
+.admin-release-panel .release-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.release-info-card {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #d5a83e55;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #d5a83e12, #0d0f14);
+}
+
+.release-info-card span {
+  display: block;
+  margin-bottom: 7px;
+  color: #bdb5a5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+}
+
+.release-info-card strong {
+  display: block;
+  color: #ffe3a0;
+  font-size: 14px;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.release-date {
+  margin: 10px 0;
+  color: #d8cfbc;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+#admin-refresh-release {
+  width: 100%;
+  min-height: 45px;
+  border: 1px solid #b88d4377;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #393020, #242018);
+  color: #ffe5a4;
+  font-weight: 900;
+}
+
+#admin-refresh-release:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+@media(max-width:420px) {
+  .admin-release-panel .release-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
