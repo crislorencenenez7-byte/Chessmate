@@ -60,3 +60,12 @@ For Pages, open repository **Settings → Pages → Build and deployment → Sou
 - Stockfish.js is GPL-3.0; see `public/engine/COPYING-Stockfish-GPLv3.txt`.
 - Chess piece artwork licence: see `public/pieces/LICENSE.txt`.
 - chess.js is BSD-2-Clause.
+
+
+## Latest package update: AI opponent characters and Raining Tacos event
+
+- Added character avatar portraits for the six local AI opponent profiles.
+- The opponent card appears in the AI player's seat and reacts to the human player's move classification.
+- The opponent also comments after its own move, with different reactions for checks, captures, and ordinary moves.
+- The Raining Tacos event now plays an original four-note synthesized jingle while the event is active on the Home screen. It stops outside the Home screen and requires a user tap first so mobile browsers can unlock audio.
+- The uploaded `ChessMate.zip` did not contain an MP3/OGG/WAV audio file. Therefore this package does not include or claim to use the separately mentioned supplied recording.

@@ -1,4 +1,4 @@
-const CACHE = 'chessmate-shell-v12';
+const CACHE = 'chessmate-shell-v13';
 
 const CORE = [
   './',
@@ -8,6 +8,8 @@ const CORE = [
   './pwa.js',
   './manifest.webmanifest',
   './config.js',
+  './avatars/stockfish.svg', './avatars/fischer.svg', './avatars/mittens.svg',
+  './avatars/master.svg', './avatars/club.svg', './avatars/beginner.svg',
   './vendor/chess.js',
   './js/engine.js',
   './js/classify.js',

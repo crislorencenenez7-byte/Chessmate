@@ -1056,3 +1056,47 @@ h2 {
   50% { transform: translate3d(24px, 48vh, 0) rotate(150deg); }
   100% { transform: translate3d(-18px, 112vh, 0) rotate(340deg); }
 }
+
+
+/* AI opponent character card and live reactions */
+.pl.ai-opponent-card {
+  align-items: center;
+  gap: 10px;
+  min-height: 82px;
+  padding: 8px 11px;
+  border-color: #66502b;
+  background: linear-gradient(115deg, #24202a, #171b21 72%);
+}
+.ai-opponent-face {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 3px 7px #0008);
+  transition: transform .22s ease, filter .22s ease;
+}
+.ai-opponent-face[data-emotion="surprised"] { transform: scale(1.12) rotate(-5deg); filter: drop-shadow(0 0 9px #f0c875); }
+.ai-opponent-face[data-emotion="smug"] { transform: rotate(5deg) scale(1.04); }
+.ai-opponent-face[data-emotion="thinking"] { transform: rotate(-4deg); }
+.ai-opponent-face[data-emotion="talking"] { animation: opponent-talk .38s ease-in-out 2 alternate; }
+.ai-opponent-face.react { animation: opponent-react .42s ease-out; }
+.ai-opponent-info { display:flex; flex-direction:column; align-items:flex-start; min-width:0; gap:3px; }
+.ai-opponent-name { font-size:14px; font-weight:850; }
+.ai-opponent-name small { display:inline-block; margin-left:5px; color:#e4c06a; font-size:9px; letter-spacing:.1em; }
+.ai-opponent-speech {
+  display:block;
+  max-width:min(64vw,390px);
+  color:#f3e6c9;
+  font-size:12px;
+  line-height:1.25;
+  white-space:normal;
+}
+.ai-opponent-info .pr { color:var(--muted); font-size:11px; }
+@keyframes opponent-react { 0%{transform:scale(.82)} 65%{transform:scale(1.13) rotate(-4deg)} 100%{transform:scale(1)} }
+@keyframes opponent-talk { from{transform:translateY(0)} to{transform:translateY(-3px) scale(1.04)} }
+@media(max-width:700px) {
+  .pl.ai-opponent-card { min-height:74px; padding:6px 7px; gap:7px; }
+  .ai-opponent-face { width:52px; height:52px; flex-basis:52px; }
+  .ai-opponent-speech { font-size:11px; }
+}

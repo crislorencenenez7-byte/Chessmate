@@ -78,25 +78,26 @@ function ensureTacoRainLayer() {
 function playTacoDropSound() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass || !window.__cmTacoAudioReady) return;
-
   try {
     const ctx = window.__cmTacoAudioContext || (window.__cmTacoAudioContext = new AudioContextClass());
     if (ctx.state !== "running") return;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    // Original cheerful taco-event jingle; not a commercial-song recording or recreation.
+    const notes = [659.25, 783.99, 987.77, 783.99];
     const now = ctx.currentTime;
-
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(620, now);
-    osc.frequency.exponentialRampToValueAtTime(240, now + 0.18);
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.23);
+    notes.forEach((frequency, index) => {
+      const start = now + index * 0.13;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(frequency, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.075, start + 0.018);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.19);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.2);
+    });
   } catch {}
 }
 
@@ -374,14 +375,67 @@ function ensureEngine() {
     .catch(() => toast("Stockfish could not start here — you can still play, but analysis is unavailable."));
 }
 
+function setOpponentReaction(message, emotion = "neutral") {
+  if (!G || G.mode !== "ai") return;
+  const opponentColor = G.myColor === "w" ? "b" : "w";
+  const el = document.querySelector(`.pl[data-color="${opponentColor}"]`);
+  if (!el) return;
+  const bubble = el.querySelector(".ai-opponent-speech");
+  const face = el.querySelector(".ai-opponent-face");
+  if (bubble) bubble.textContent = message;
+  if (face) {
+    face.dataset.emotion = emotion;
+    face.classList.remove("react");
+    void face.offsetWidth;
+    face.classList.add("react");
+  }
+}
+
+function aiReactionForPlayerMove(ply) {
+  const key = ply.cls?.key || "good";
+  const reactions = {
+    brilliant: ["Whoa! That was brilliant!", "Okay, I did not expect that!", "Impressive sacrifice. I need to be careful."],
+    great: ["Nice move. You're making this interesting.", "Good find. I have to rethink my plan."],
+    best: ["Solid choice. Let's see where this goes.", "You found the strongest continuation."],
+    excellent: ["Well played. You're keeping the pressure on."],
+    good: ["A sensible move. My turn to respond."],
+    inaccuracy: ["Hmm, there may have been a stronger move.", "I think you missed a small opportunity."],
+    mistake: ["I noticed a weakness there.", "That gives me something to work with."],
+    blunder: ["Oh! That leaves a tactical opportunity.", "I spotted a serious weakness."]
+  };
+  const lines = reactions[key] || reactions.good;
+  const emotion = ["brilliant","great","best"].includes(key) ? "surprised" :
+    ["mistake","blunder"].includes(key) ? "smug" : "thinking";
+  setOpponentReaction(lines[Math.floor(Math.random() * lines.length)], emotion);
+}
+
+function aiReactionAfterOpponentMove(ply) {
+  if (!G || G.mode !== "ai") return;
+  const board = G.live;
+  let message, emotion = "thinking";
+  if (board.isCheckmate()) { message = "Checkmate! What a game."; emotion = "surprised"; }
+  else if (board.isCheck()) { message = ["Check! Your king needs attention.", "I found a check. How will you respond?"][Math.floor(Math.random()*2)]; emotion = "smug"; }
+  else if (ply.captured) { message = ["I captured a piece. Let's see how you respond.", "One less piece on the board!"][Math.floor(Math.random()*2)]; emotion = "smug"; }
+  else if (ply.piece === "q") { message = "The queen is entering the battle."; emotion = "surprised"; }
+  else { message = ["Your move. I'm watching the whole board.", "Let's keep developing our position.", "I have a plan forming..."][Math.floor(Math.random()*3)]; }
+  setOpponentReaction(message, emotion);
+}
+
 function setPlayers() {
   const bottom = G.orient, top = bottom === "w" ? "b" : "w";
   const fill = (el, c) => {
     const n = G.names[c];
-    el.querySelector(".disc").className = "disc " + c;
-    el.querySelector(".pn").textContent = n.name;
-    el.querySelector(".pr").textContent = n.sub || "";
     el.dataset.color = c;
+    if (G.mode === "ai" && c !== G.myColor) {
+      const bot = BOT_PROFILES.find(x => x.id === G.bot) || BOT_PROFILES[4];
+      el.classList.add("ai-opponent-card");
+      el.innerHTML = `<img class="ai-opponent-face" data-emotion="neutral" src="./avatars/${bot.id}.svg" alt="${bot.name} avatar"><span class="ai-opponent-info"><span class="ai-opponent-name">${escapeHtml(bot.name)} <small>AI OPPONENT</small></span><span class="ai-opponent-speech">${escapeHtml(bot.voice)}</span><span class="pr">${escapeHtml(n.sub || "")}</span></span>`;
+    } else {
+      el.classList.remove("ai-opponent-card");
+      el.innerHTML = `<i class="disc ${c}"></i><span class="pn"></span><span class="pr"></span>`;
+      el.querySelector(".pn").textContent = n.name;
+      el.querySelector(".pr").textContent = n.sub || "";
+    }
   };
   fill($("pl-top"), top);
   fill($("pl-bot"), bottom);
@@ -481,6 +535,7 @@ function coachSpeak(message) {
   if (!G || G.mode !== "ai") return;
   G.coachMessage = message;
   renderCoach();
+  if (G.mode === "ai") setOpponentReaction(message, "talking");
   if (!aiSetup.voice || !("speechSynthesis" in window)) return;
   try {
     window.speechSynthesis.cancel();
@@ -524,7 +579,10 @@ async function analyzePly(i) {
     });
     if (r) {
       ply.cls = r;
-      if (!ply.seen && g.mode === "ai" && ply.color === g.myColor) coachFeedback(ply);
+      if (!ply.seen && g.mode === "ai" && ply.color === g.myColor) {
+        coachFeedback(ply);
+        aiReactionForPlayerMove(ply);
+      }
       ply.seen = true;
     }
   } catch { return; }
@@ -600,7 +658,8 @@ function maybeAi() {
     })
     .then(uci => {
       if (G !== g || g.over || g.live.fen() !== fen || !uci) return;
-      applyMove({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] }, { remote: true });
+      const aiPly = applyMove({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] }, { remote: true });
+      if (aiPly) aiReactionAfterOpponentMove(aiPly);
     })
     .finally(() => { if (G === g) g.aiBusy = false; });
 }
