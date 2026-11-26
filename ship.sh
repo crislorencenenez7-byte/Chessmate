@@ -84,4 +84,4 @@ git push origin main
 
 echo
 echo "SUCCESS: ChessMate pushed to GitHub!"
-echo "Service Worker cache version: v${new_version}"
+echo "Service Worker cache version: updated"
