@@ -316,8 +316,17 @@ async function ensureSocketAuth() {
 
 async function refreshMe() {
   if (!token) return;
-  try { setUser((await api("/api/me")).user); }
-  catch { token = ""; store("cm_token", null); setUser(null); }
+  try {
+    const data = await api("/api/me");
+    const account = data.user;
+    setUser(account);
+    toast(`Account: ${account?.username || "Unknown"} | Admin: ${account?.isAdmin === true ? "YES" : "NO"}`);
+  } catch (error) {
+    console.warn("[ChessMate /api/me diagnostic]", error.message);
+    token = "";
+    store("cm_token", null);
+    setUser(null);
+  }
 }
 
 /* ------------------------------------------------------------------ chess helpers */
