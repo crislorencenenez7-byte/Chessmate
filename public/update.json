@@ -1,6 +1,6 @@
 {
-  "enabled": true,
-  "scheduledAt": "2026-11-26T14:29:29.155Z",
+  "enabled": false,
+  "scheduledAt": null,
   "date": "Nov 26, 2026, 10:29 PM (Philippines time)",
   "title": "ChessMate Update",
   "description": [
