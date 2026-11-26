@@ -1356,7 +1356,8 @@ function setupUI() {
       const d = await api("/api/" + authMode, { method: "POST", body: JSON.stringify({ username: $("auth-user").value, password: $("auth-pass").value }) });
       token = d.token; store("cm_token", token); setUser(d.user);
       $("auth-error").textContent = ""; $("auth-pass").value = "";
-      show("home"); toast("Welcome, " + d.user.username);
+      show("home");
+      toast(`Login: ${d.user?.username || "Unknown"} | Admin: ${d.user?.isAdmin === true ? "YES" : "NO"}`);
     } catch (e) { $("auth-error").textContent = e.message; }
   };
   $("auth-pass").addEventListener("keydown", e => { if (e.key === "Enter") $("auth-submit").click(); });
