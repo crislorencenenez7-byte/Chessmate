@@ -1357,7 +1357,7 @@ function setupUI() {
       token = d.token; store("cm_token", token); setUser(d.user);
       $("auth-error").textContent = ""; $("auth-pass").value = "";
       show("home");
-      toast(`Login: ${d.user?.username || "Unknown"} | Admin: ${d.user?.isAdmin === true ? "YES" : "NO"}`);
+      alert(`Account: ${d.user?.username || "Unknown"}\nAdmin: ${d.user?.isAdmin === true ? "YES" : "NO"}`);
     } catch (e) { $("auth-error").textContent = e.message; }
   };
   $("auth-pass").addEventListener("keydown", e => { if (e.key === "Enter") $("auth-submit").click(); });
