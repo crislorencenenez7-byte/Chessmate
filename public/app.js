@@ -210,7 +210,7 @@ function showGlobalAnnouncement(data) {
 
   const name = document.createElement("strong");
   name.className = "ga-name";
-  name.textContent = String(data.username || "CrisLorence");
+  name.textContent = String(data.username || "Admin");
   el.appendChild(name);
 
   if (data.verified) {
@@ -220,6 +220,12 @@ function showGlobalAnnouncement(data) {
     check.setAttribute("aria-label", "Verified");
     el.appendChild(check);
   }
+
+  const role = document.createElement("span");
+  const isOwner = String(data.role || "").toUpperCase() === "OWNER";
+  role.className = "ga-role " + (isOwner ? "ga-owner" : "ga-admin");
+  role.textContent = isOwner ? " 👑 OWNER" : " 🛡️ ADMIN";
+  el.appendChild(role);
 
   const message = document.createElement("span");
   message.className = "ga-message";

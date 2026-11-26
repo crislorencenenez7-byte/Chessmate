@@ -195,9 +195,15 @@ app.post("/api/admin/announcement", adminAuth, (req, res) => {
     return res.status(400).json({ error: "Announcement must be 1–180 characters." });
   }
 
+  const username = req.admin.username;
+  const role = username.toLowerCase() === "crislorence"
+    ? "OWNER"
+    : "ADMIN";
+
   const announcement = {
     id: crypto.randomUUID(),
-    username: "CrisLorence",
+    username,
+    role,
     verified: true,
     message
   };

@@ -1100,3 +1100,25 @@ h2 {
   .ai-opponent-face { width:52px; height:52px; flex-basis:52px; }
   .ai-opponent-speech { font-size:11px; }
 }
+
+
+/* Announcement role badges */
+.ga-role {
+  display:inline-block;
+  margin-left:5px;
+  padding:2px 7px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:900;
+  vertical-align:middle;
+}
+.ga-owner {
+  color:#ffd76a;
+  background:#604511;
+  border:1px solid #d5a83e;
+}
+.ga-admin {
+  color:#8dccff;
+  background:#123b60;
+  border:1px solid #398bd0;
+}
