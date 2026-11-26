@@ -41,7 +41,7 @@ sw.write_text(source)
 
 config = json.loads(config_file.read_text())
 
-release = datetime.now(timezone.utc) + timedelta(minutes=3)
+release = datetime.now(timezone.utc) + timedelta(minutes=4)
 
 config["enabled"] = True
 config["scheduledAt"] = release.isoformat(timespec="milliseconds").replace("+00:00", "Z")
