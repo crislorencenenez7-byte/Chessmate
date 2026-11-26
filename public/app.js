@@ -46,6 +46,77 @@ function store(k, v) {
   return null;
 }
 
+
+/* ------------------------------------------------------------------ Home UI sound */
+let homeSoundEnabled = store("cm_home_sound") !== "off";
+let homeAudioContext = null;
+
+function updateHomeSoundButton() {
+  const button = $("home-sound-toggle");
+  if (!button) return;
+  button.setAttribute("aria-pressed", String(homeSoundEnabled));
+  button.querySelector(".sound-label").textContent =
+    homeSoundEnabled ? "Sound On" : "Sound Off";
+  button.querySelector(".sound-icon").textContent =
+    homeSoundEnabled ? "♫" : "♪";
+}
+
+function playHomeUiSound() {
+  if (!homeSoundEnabled) return;
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    homeAudioContext ||= new AudioContextClass();
+
+    const ctx = homeAudioContext;
+    const play = () => {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.exponentialRampToValueAtTime(780, now + 0.075);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.035, now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    };
+
+    if (ctx.state === "suspended") {
+      ctx.resume().then(play).catch(() => {});
+    } else {
+      play();
+    }
+  } catch {}
+}
+
+const homeSoundToggle = $("home-sound-toggle");
+if (homeSoundToggle) {
+  updateHomeSoundButton();
+
+  homeSoundToggle.addEventListener("click", () => {
+    homeSoundEnabled = !homeSoundEnabled;
+    store("cm_home_sound", homeSoundEnabled ? "on" : "off");
+    updateHomeSoundButton();
+
+    if (homeSoundEnabled) playHomeUiSound();
+  });
+}
+
+document.addEventListener("pointerdown", event => {
+  if (!event.target.closest("#home button")) return;
+  if (event.target.closest("#home-sound-toggle")) return;
+  playHomeUiSound();
+}, { capture: true, passive: true });
+
 /* ------------------------------------------------------------------ Raining Tacos event */
 function setTacoEventActive(active) {
   window.__cmTacoEventActive = active === true;
@@ -599,7 +670,20 @@ function applyMove(m, o = {}) {
   G.sel = null; G.promoPending = null;
   if (o.user) G.premove = null;
   $("promo").classList.add("hidden");
-  if (atLive) { G.view = G.plies.length; G.vc = null; G.anim = o.noAnim ? null : { from: made.from, to: made.to }; }
+  if (atLive) {
+    G.view = G.plies.length;
+    G.vc = null;
+    G.anim = o.noAnim ? null : [{ from: made.from, to: made.to }];
+
+    if (G.anim && made.flags) {
+      const rank = made.color === "w" ? "1" : "8";
+      if (made.flags.includes("k")) {
+        G.anim.push({ from: "h" + rank, to: "f" + rank });
+      } else if (made.flags.includes("q")) {
+        G.anim.push({ from: "a" + rank, to: "d" + rank });
+      }
+    }
+  }
 
   const end = resultOf(G.live);
   if (end && !G.over) {
@@ -829,18 +913,45 @@ function render() {
   boardEl.replaceChildren(frag);
 
   if (G.anim) {
-    const { from, to } = G.anim;
+    const moves = Array.isArray(G.anim) ? G.anim : [G.anim];
     G.anim = null;
-    const img = boardEl.querySelector(`[data-sq="${to}"] .piece`);
-    if (img) {
-      const [fc, fr] = coordsOf(from), [tc, tr] = coordsOf(to);
-      const s = boardEl.clientWidth / 8;
-      img.style.transform = `translate(${(fc - tc) * s}px,${(fr - tr) * s}px)`;
-      img.style.zIndex = 6;
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        img.style.transition = "transform .17s ease-out";
-        img.style.transform = "";
-      }));
+
+    const reduceMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    if (!reduceMotion) {
+      const squareSize = boardEl.clientWidth / 8;
+
+      for (const move of moves) {
+        const { from, to } = move;
+        const img = boardEl.querySelector(`[data-sq="${to}"] .piece`);
+        if (!img) continue;
+
+        const [fc, fr] = coordsOf(from);
+        const [tc, tr] = coordsOf(to);
+        const dx = (fc - tc) * squareSize;
+        const dy = (fr - tr) * squareSize;
+
+        img.style.zIndex = "6";
+        img.style.willChange = "transform";
+
+        const animation = img.animate(
+          [
+            { transform: `translate3d(${dx}px, ${dy}px, 0)` },
+            { transform: "translate3d(0, 0, 0)" }
+          ],
+          {
+            duration: 300,
+            easing: "cubic-bezier(.16,1,.3,1)",
+            fill: "both"
+          }
+        );
+
+        animation.onfinish = () => {
+          img.style.zIndex = "";
+          img.style.willChange = "";
+        };
+      }
     }
   }
   renderBadge();
@@ -1199,7 +1310,7 @@ function setupBoardInput() {
     if (d.moved) {
       const to = cancel ? null : sqFromPoint(e.clientX, e.clientY);
       G.sel = null;
-      if (!(to && to !== d.from && tryMove(d.from, to, { noAnim: true }))) render();
+      if (!(to && to !== d.from && tryMove(d.from, to))) render();
     } else if (d.wasSelected) {
       G.sel = null; render();    // tapping the selected piece again deselects it
     }

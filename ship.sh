@@ -41,7 +41,7 @@ sw.write_text(source)
 
 config = json.loads(config_file.read_text())
 
-release = datetime.now(timezone.utc) + timedelta(minutes=4)
+release = datetime.now(timezone.utc) + timedelta(minutes=10)
 
 config["enabled"] = True
 config["scheduledAt"] = release.isoformat(timespec="milliseconds").replace("+00:00", "Z")
@@ -58,7 +58,7 @@ print(f"Update ID: {config['version']}")
 PY
 
 # Stage project changes
-git add -A
+git add ship.sh public/app.js public/index.html public/style.css public/sw.js public/update.json
 
 # Block accidental publishing of sensitive files
 if git diff --cached --name-only | grep -Ei '(^|/)(\.env($|\.)|.*\.db$|.*\.sqlite3?$|.*backup.*|.*\.bak$|.*\.pem$|.*\.key$|id_rsa)'; then
