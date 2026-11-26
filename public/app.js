@@ -407,32 +407,112 @@ function setOpponentReaction(message, emotion = "neutral") {
 }
 
 function aiReactionForPlayerMove(ply) {
+  if (!G || G.mode !== "ai") return;
+
   const key = ply.cls?.key || "good";
-  const reactions = {
-    brilliant: ["Whoa! That was brilliant!", "Okay, I did not expect that!", "Impressive sacrifice. I need to be careful."],
-    great: ["Nice move. You're making this interesting.", "Good find. I have to rethink my plan."],
-    best: ["Solid choice. Let's see where this goes.", "You found the strongest continuation."],
-    excellent: ["Well played. You're keeping the pressure on."],
-    good: ["A sensible move. My turn to respond."],
-    inaccuracy: ["Hmm, there may have been a stronger move.", "I think you missed a small opportunity."],
-    mistake: ["I noticed a weakness there.", "That gives me something to work with."],
-    blunder: ["Oh! That leaves a tactical opportunity.", "I spotted a serious weakness."]
+  const dialogue = {
+    stockfish: {
+      brilliant: "An unexpected tactical idea. I must recalculate.",
+      great: "A strong move. The position is getting interesting.",
+      best: "A precise move. I will respond carefully.",
+      excellent: "Well played. I see your plan.",
+      good: "A reasonable move. Let me calculate.",
+      inaccuracy: "That changes the evaluation slightly.",
+      mistake: "That move gives me a possible advantage.",
+      blunder: "A serious tactical opportunity has appeared."
+    },
+    fischer: {
+      brilliant: "Excellent! You found an ambitious move.",
+      great: "Very interesting. You are playing actively.",
+      best: "A sound move. Let's continue.",
+      excellent: "Good development. I respect that.",
+      good: "A sensible decision.",
+      inaccuracy: "You could have played more actively.",
+      mistake: "I think you overlooked something.",
+      blunder: "That is a costly mistake."
+    },
+    mittens: {
+      brilliant: "Whoa! That was a clever move. Meow!",
+      great: "Ooh, nice move! This is getting fun.",
+      best: "Purrfectly played!",
+      excellent: "Not bad at all!",
+      good: "Okay! My turn!",
+      inaccuracy: "Hmm... I think you had a better move.",
+      mistake: "Oops! I noticed something.",
+      blunder: "Meow! That looks like trouble."
+    },
+    master: {
+      brilliant: "Remarkable. A very strong tactical idea.",
+      great: "Impressive. You understand the position.",
+      best: "Excellent positional judgment.",
+      excellent: "A disciplined move.",
+      good: "A practical choice.",
+      inaccuracy: "Your move slightly weakens the position.",
+      mistake: "You should reconsider that plan.",
+      blunder: "That creates a major weakness."
+    },
+    club: {
+      brilliant: "Wow! I did not see that coming.",
+      great: "Nice one! You are putting up a fight.",
+      best: "Good choice. Let's see what happens.",
+      excellent: "Well played!",
+      good: "Looks like a solid move.",
+      inaccuracy: "Hmm, maybe there was a better option.",
+      mistake: "I think you missed a threat.",
+      blunder: "Oh, that could cost you."
+    },
+    beginner: {
+      brilliant: "Wow! That was amazing!",
+      great: "Great move! You're improving.",
+      best: "Nice choice!",
+      excellent: "Well done!",
+      good: "Good move. My turn now.",
+      inaccuracy: "Maybe another move was a little stronger.",
+      mistake: "Careful! There may be a threat.",
+      blunder: "Oh! That move may cause problems."
+    }
   };
-  const lines = reactions[key] || reactions.good;
-  const emotion = ["brilliant","great","best"].includes(key) ? "surprised" :
-    ["mistake","blunder"].includes(key) ? "smug" : "thinking";
-  setOpponentReaction(lines[Math.floor(Math.random() * lines.length)], emotion);
+
+  const lines = dialogue[G.bot] || dialogue.club;
+  const message = lines[key] || lines.good;
+  const emotion = ["brilliant", "great", "best"].includes(key) ? "surprised" :
+    ["mistake", "blunder"].includes(key) ? "smug" : "thinking";
+
+  coachSpeak(message);
+  setOpponentReaction(message, emotion);
 }
 
 function aiReactionAfterOpponentMove(ply) {
   if (!G || G.mode !== "ai") return;
+
   const board = G.live;
-  let message, emotion = "thinking";
-  if (board.isCheckmate()) { message = "Checkmate! What a game."; emotion = "surprised"; }
-  else if (board.isCheck()) { message = ["Check! Your king needs attention.", "I found a check. How will you respond?"][Math.floor(Math.random()*2)]; emotion = "smug"; }
-  else if (ply.captured) { message = ["I captured a piece. Let's see how you respond.", "One less piece on the board!"][Math.floor(Math.random()*2)]; emotion = "smug"; }
-  else if (ply.piece === "q") { message = "The queen is entering the battle."; emotion = "surprised"; }
-  else { message = ["Your move. I'm watching the whole board.", "Let's keep developing our position.", "I have a plan forming..."][Math.floor(Math.random()*3)]; }
+  const lines = {
+    stockfish: "Position updated. Your turn.",
+    fischer: "Your move. Think carefully.",
+    mittens: "Meow! Your turn now!",
+    master: "The position is set. Your move.",
+    club: "All right, let's see your reply!",
+    beginner: "Your turn! What will you play?"
+  };
+
+  let message = lines[G.bot] || lines.club;
+  let emotion = "thinking";
+
+  if (board.isCheckmate()) {
+    message = "Checkmate! That was a decisive game.";
+    emotion = "surprised";
+  } else if (board.isCheck()) {
+    message = "Check! Your king is under attack.";
+    emotion = "smug";
+  } else if (ply.captured) {
+    message = "I captured a piece. Your move!";
+    emotion = "smug";
+  } else if (ply.piece === "q") {
+    message = "The queen is entering the battle.";
+    emotion = "surprised";
+  }
+
+  coachSpeak(message);
   setOpponentReaction(message, emotion);
 }
 
@@ -550,13 +630,34 @@ function coachSpeak(message) {
   if (!G || G.mode !== "ai") return;
   G.coachMessage = message;
   renderCoach();
-  if (G.mode === "ai") setOpponentReaction(message, "talking");
+  setOpponentReaction(message, "talking");
+
   if (!aiSetup.voice || !("speechSynthesis" in window)) return;
+
+  const styles = {
+    stockfish: { pitch: 0.78, rate: 0.92, voice: 0 },
+    fischer:   { pitch: 0.92, rate: 0.96, voice: 1 },
+    mittens:   { pitch: 1.35, rate: 1.08, voice: 2 },
+    master:    { pitch: 0.85, rate: 0.90, voice: 3 },
+    club:      { pitch: 1.02, rate: 1.00, voice: 4 },
+    beginner:  { pitch: 1.18, rate: 0.94, voice: 5 }
+  };
+
   try {
-    window.speechSynthesis.cancel();
+    const style = styles[G.bot] || styles.club;
     const utterance = new SpeechSynthesisUtterance(message);
-    utterance.rate = 1;
-    utterance.pitch = G.bot === "mittens" ? 1.15 : 1;
+    const voices = window.speechSynthesis.getVoices()
+      .filter(v => /^en(-|_)/i.test(v.lang));
+
+    if (voices.length) {
+      utterance.voice = voices[style.voice % voices.length];
+    }
+
+    utterance.lang = "en-US";
+    utterance.rate = style.rate;
+    utterance.pitch = style.pitch;
+
+    window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   } catch {}
 }
@@ -573,7 +674,8 @@ function coachFeedback(ply) {
     mistake: "That is a mistake. Before moving, check your opponent's threats and loose pieces.",
     blunder: "That is a blunder. Pause and look for checks, captures, and threats before your next move."
   };
-  coachSpeak(messages[ply.cls.key] || "Let's review this position together.");
+  G.coachMessage = messages[ply.cls.key] || "Let's review this position together.";
+  renderCoach();
 }
 
 /* ------------------------------------------------------------------ engine analysis */
@@ -662,7 +764,7 @@ function maybeAi() {
     renderCoach();
   }
   const think = engine.state === "failed" ? Promise.reject(new Error("no engine")) : engine.playMove(fen, g.level);
-  const pause = new Promise(r => setTimeout(r, 350));
+  const pause = new Promise(r => setTimeout(r, 1500));
   Promise.all([think, pause])
     .then(([uci]) => uci)
     .catch(() => {
