@@ -630,6 +630,7 @@ async function renderAdminCoach() {
     ) return;
 
     let brilliant = null;
+    let great = null;
     let fallback = null;
 
     for (const line of analysis?.lines || []) {
@@ -642,7 +643,6 @@ async function renderAdminCoach() {
       try {
         const position = new Chess(fen);
         const move = position.move({ from, to, promotion });
-
         if (!move) continue;
 
         const result = classifyMove({
@@ -654,28 +654,31 @@ async function renderAdminCoach() {
           terminal: null
         });
 
-        if (!fallback) {
-          fallback = { from, to, result };
-        }
+        const candidate = { from, to, result };
+
+        if (!fallback) fallback = candidate;
+        if (result?.key === "great" && !great) great = candidate;
 
         if (result?.key === "brilliant") {
-          brilliant = { from, to, result };
+          brilliant = candidate;
           break;
         }
       } catch {}
     }
 
-    const recommendation = brilliant || fallback;
+    const recommendation = brilliant || great || fallback;
 
     if (!recommendation) {
-      hint.textContent = "MOVE COACH · No recommended move found in the current position.";
+      hint.textContent = "MOVE COACH · No legal move available.";
       return;
     }
 
     const { from, to, result } = recommendation;
     const moveLabel = brilliant
       ? "BRILLIANT MOVE"
-      : (["best", "great"].includes(result?.key) ? `${result.key.toUpperCase()} MOVE` : "BEST MOVE");
+      : great
+        ? "GREAT MOVE"
+        : "BEST MOVE";
 
     hint.textContent = brilliant
       ? `${moveLabel} · ${from.toUpperCase()} → ${to.toUpperCase()} · SACRIFICE ${result.sac.toFixed(1)} PAWNS`
