@@ -630,6 +630,7 @@ async function renderAdminCoach() {
     ) return;
 
     let brilliant = null;
+    let fallback = null;
 
     for (const line of analysis?.lines || []) {
       if (!line.move || line.move.length < 4) continue;
@@ -653,6 +654,10 @@ async function renderAdminCoach() {
           terminal: null
         });
 
+        if (!fallback) {
+          fallback = { from, to, result };
+        }
+
         if (result?.key === "brilliant") {
           brilliant = { from, to, result };
           break;
@@ -660,14 +665,21 @@ async function renderAdminCoach() {
       } catch {}
     }
 
-    if (!brilliant) {
-      hint.textContent = "BRILLIANT MOVE COACH · No qualifying Brilliant Move found in the current position.";
+    const recommendation = brilliant || fallback;
+
+    if (!recommendation) {
+      hint.textContent = "MOVE COACH · No recommended move found in the current position.";
       return;
     }
 
-    const { from, to, result } = brilliant;
-    hint.textContent =
-      `BRILLIANT MOVE · ${from.toUpperCase()} → ${to.toUpperCase()} · SACRIFICE ${result.sac.toFixed(1)} PAWNS`;
+    const { from, to, result } = recommendation;
+    const moveLabel = brilliant
+      ? "BRILLIANT MOVE"
+      : (["best", "great"].includes(result?.key) ? `${result.key.toUpperCase()} MOVE` : "BEST MOVE");
+
+    hint.textContent = brilliant
+      ? `${moveLabel} · ${from.toUpperCase()} → ${to.toUpperCase()} · SACRIFICE ${result.sac.toFixed(1)} PAWNS`
+      : `${moveLabel} · ${from.toUpperCase()} → ${to.toUpperCase()}`;
 
     const a = board.querySelector(`[data-sq="${from}"]`);
     const b = board.querySelector(`[data-sq="${to}"]`);
