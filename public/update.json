@@ -1,11 +1,11 @@
 {
   "enabled": true,
-  "scheduledAt": "2026-11-26T09:34:12.036Z",
-  "date": "Nov 26, 2026, 05:34 PM (Philippines time)",
+  "scheduledAt": "2026-11-26T09:36:02.459Z",
+  "date": "Nov 26, 2026, 05:36 PM (Philippines time)",
   "title": "ChessMate Scheduled Update",
   "description": [
     "Global Announcement",
     "Always Show The Brilliant Move"
   ],
-  "version": "chessmate-1795685652036"
+  "version": "chessmate-1795685762459"
 }
