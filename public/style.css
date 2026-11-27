@@ -2740,3 +2740,41 @@ body {
     font-size: 9px;
   }
 }
+
+
+/* ChessMate Global Desktop-Site Fit v2.3.17 */
+html {
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+@media (max-width: 700px) {
+  html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  body {
+    zoom: 0.92;
+    width: 108.6957%;
+    min-width: 0;
+  }
+
+  .app, .screen, #home, #game,
+  .game-wrap, .board-area {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #home .mode-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  #home .mode-card {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
