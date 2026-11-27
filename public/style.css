@@ -2428,3 +2428,133 @@ body {
 #board .cm-final-announcement{z-index:20}
 @keyframes cm-ring-pulse{from{transform:scale(.88);opacity:.65}to{transform:scale(1.08);opacity:1}}
 @keyframes cm-bolt{0%{opacity:0;transform:translate(-50%,-75%) scale(.5)}25%{opacity:1;transform:translate(-50%,-55%) scale(1.25)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+
+
+/* =====================================================================
+   BOARD THEMES — Christmas Event (green) + Exclusive Deals Royal Sapphire (blue)
+   Driven by body[data-fx="christmas|sapphire"] and #board.theme-*.
+   ===================================================================== */
+#game { position: relative; }
+.theme-deco { display: none; }
+#game .game-wrap { position: relative; z-index: 1; }
+
+/* ---------- shared marble board ---------- */
+#board.theme-christmas, #board.theme-sapphire { border-radius: 4px; outline: 0; }
+#board.theme-christmas .sq.light, #board.theme-sapphire .sq.light { background-image: url(./themes/marble-cream.svg) !important; background-color: #f3e9d2 !important; }
+#board.theme-christmas .sq.dark { background-image: url(./themes/marble-emerald.svg) !important; background-color: #0f4a26 !important; }
+#board.theme-sapphire .sq.dark { background-image: url(./themes/marble-sapphire.svg) !important; background-color: #0a1c52 !important; }
+#board.theme-christmas .sq, #board.theme-sapphire .sq { box-shadow: inset 0 0 0 .5px #e9c66e55; }
+#board.theme-christmas .sq .piece, #board.theme-sapphire .sq .piece { filter: drop-shadow(0 2px 2px #0008) drop-shadow(0 0 1px #0006); }
+#board.theme-christmas .sq.light .crd, #board.theme-sapphire .sq.light .crd { color: #9b7a35; }
+#board.theme-christmas .sq.dark .crd, #board.theme-sapphire .sq.dark .crd { color: #f1d98c; }
+#board.theme-christmas .sq.dot::after, #board.theme-sapphire .sq.dot::after { background: #f3cf6f; box-shadow: 0 0 10px #f3cf6f; }
+
+/* frame */
+body[data-fx="christmas"] .board-frame, body[data-fx="sapphire"] .board-frame { filter: none; }
+body[data-fx="christmas"] #board, body[data-fx="sapphire"] #board {
+  box-shadow: 0 0 0 3px #d9b24c, 0 0 0 5px #5a4210, 0 0 0 7px #f3d98a, 0 22px 50px #000c;
+}
+.board-frame::before, .board-frame::after { content: none; }
+body[data-fx] .board-frame::before, body[data-fx] .board-frame::after {
+  content: ""; position: absolute; inset: -22px; pointer-events: none; border-radius: 16px; padding: 18px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+body[data-fx] .board-frame::before { z-index: 0; }
+body[data-fx] .board-frame::after { z-index: 3; }
+body[data-fx] #board { z-index: 1; }
+
+/* ---------- CHRISTMAS (green) ---------- */
+body[data-fx="christmas"]:has(#game.active) { background:
+  radial-gradient(ellipse at 15% 0%, #2a2f8c55, transparent 45%),
+  radial-gradient(ellipse at 90% 20%, #4a2a9455, transparent 40%),
+  linear-gradient(180deg, #0a0f2e, #0b1330 55%, #0a1a22); }
+body[data-fx="christmas"]:has(#game.active) #topbar { background: linear-gradient(100deg, #0b1d22, #101a2c 60%, #1a1020); border-bottom: 1px solid #e9c66e55; }
+body[data-fx="christmas"] .christmas-snow { opacity: .75; }
+/* holly garland */
+body[data-fx="christmas"] .board-frame::before {
+  background:
+    radial-gradient(circle at 50% 50%, #e4333f 0 3.2px, #8e1420 3.8px, transparent 4.6px) 6px 4px / 38px 22px,
+    radial-gradient(circle at 50% 50%, #e4333f 0 2.6px, #8e1420 3.2px, transparent 4px) 25px 14px / 46px 22px,
+    radial-gradient(ellipse 10px 4.5px at 30% 40%, #2f9a4b 0 80%, transparent 100%) 0 0 / 15px 12px,
+    radial-gradient(ellipse 9px 4px at 60% 70%, #1d6e36 0 80%, transparent 100%) 5px 4px / 13px 11px,
+    radial-gradient(ellipse 11px 4px at 20% 80%, #44b862 0 80%, transparent 100%) 2px 2px / 17px 13px,
+    linear-gradient(#17592f, #17592f);
+}
+/* twinkling lights */
+body[data-fx="christmas"] .board-frame::after {
+  background:
+    radial-gradient(circle, #fff3b0 0 2px, #ffd24a 3px, #ffd24a00 7px) 0 0 / 34px 34px,
+    radial-gradient(circle, #ffe6c0 0 1.5px, #ff9f3f 2.6px, #ff9f3f00 6px) 17px 17px / 34px 34px;
+  animation: cm-twinkle 1.8s ease-in-out infinite alternate;
+}
+@keyframes cm-twinkle { from { opacity: .45; filter: brightness(.9); } to { opacity: 1; filter: brightness(1.4); } }
+body[data-fx="christmas"] .board-frame > #board { /* gold crown on the top garland */ }
+body[data-fx="christmas"] .board-frame .promo { z-index: 5; }
+#board.theme-christmas .sq.last::before { background: #ffd24a66; }
+
+/* ---------- ROYAL SAPPHIRE (blue) ---------- */
+body[data-fx="sapphire"]:has(#game.active) { background:
+  radial-gradient(ellipse at 0% 45%, #1f5fff55, transparent 38%),
+  radial-gradient(ellipse at 100% 55%, #3b8dff40, transparent 36%),
+  linear-gradient(180deg, #040a1c, #050d26 60%, #03081a); }
+body[data-fx="sapphire"]:has(#game.active) #topbar { background: linear-gradient(100deg, #061233, #0a1a45 60%, #061233); border-bottom: 1px solid #e9c66e88; box-shadow: 0 1px 18px #2a6dff44; }
+body[data-fx="sapphire"] .board-frame::before {
+  background: linear-gradient(135deg, #f7dd91, #b9892e 35%, #fff0b4 50%, #a87a24 70%, #f1d27a);
+  box-shadow: 0 0 28px #2f7bff99, 0 0 70px #2f7bff55;
+}
+body[data-fx="sapphire"] .board-frame::after {
+  inset: -22px; padding: 6px; border-radius: 16px;
+  background: linear-gradient(90deg, #3b8dff00, #8fc6ff, #3b8dff00) 0 0 / 220% 100%;
+  animation: cm-edge-glow 3.2s linear infinite;
+}
+@keyframes cm-edge-glow { to { background-position: -220% 0; } }
+#board.theme-sapphire .sq.last::before { background: #6fb6ff55; }
+
+/* King Circle */
+.king-ring { position: absolute; inset: 3%; z-index: 1; border-radius: 50%; pointer-events: none; opacity: .95;
+  background: conic-gradient(from 0deg, #3b8dff00, #8fd0ff, #3b8dff00 40%, #f3d98a, #3b8dff00 80%, #8fd0ff);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  filter: drop-shadow(0 0 5px #5aa8ff) drop-shadow(0 0 10px #2f7bff);
+  animation: cm-ring-spin 3.4s linear infinite; }
+.king-ring::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 14px #5aa8ffaa; }
+.king-ring.kc-w { background: conic-gradient(from 0deg, #f3d98a00, #ffe9a8, #f3d98a00 45%, #8fd0ff, #f3d98a00 85%, #ffe9a8); filter: drop-shadow(0 0 5px #ffd76a) drop-shadow(0 0 10px #e9a93a); }
+.king-ring.kc-mated { background: conic-gradient(#ff4a4a, #ffd0d0, #ff4a4a); filter: drop-shadow(0 0 8px #ff3b3b); animation-duration: 1.1s; }
+@keyframes cm-ring-spin { to { transform: rotate(360deg); } }
+
+/* Realistic Lightning Strike */
+.lightning-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 9998; pointer-events: none; transition: opacity .65s ease-out; }
+.lightning-canvas.out { opacity: 0; }
+.lightning-flash { position: fixed; inset: 0; z-index: 9997; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 35%, #fff, #bcd9ff 45%, #2a5fd0 100%); }
+.lightning-flash.go { animation: cm-flash .9s ease-out; }
+@keyframes cm-flash { 0%{opacity:.95} 8%{opacity:.15} 16%{opacity:.8} 26%{opacity:.1} 36%{opacity:.5} 100%{opacity:0} }
+#board.shake { animation: cm-shake .6s cubic-bezier(.36,.07,.19,.97); }
+@keyframes cm-shake { 10%,90%{transform:translate(-1px,1px)} 20%,80%{transform:translate(3px,-2px)} 30%,50%,70%{transform:translate(-5px,3px)} 40%,60%{transform:translate(5px,-3px)} }
+.sq.struck .piece { animation: cm-struck 1.6s ease-out; }
+.sq.struck::after { content: ""; position: absolute; inset: -6%; z-index: 3; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, #dff0ffcc 0, #6fb6ff88 35%, transparent 70%); animation: cm-struck-glow 3.8s ease-out forwards; }
+@keyframes cm-struck { 0%,12%{filter:brightness(6) saturate(0) drop-shadow(0 0 12px #fff)} 40%{filter:brightness(2) drop-shadow(0 0 10px #6fb6ff)} 100%{filter:brightness(.75) drop-shadow(0 2px 2px #0008)} }
+@keyframes cm-struck-glow { 0%{opacity:1; transform:scale(1.3)} 100%{opacity:0; transform:scale(.8)} }
+
+/* Checkmate burst */
+.mate-burst { position: absolute; z-index: 8; width: 0; height: 0; pointer-events: none; }
+.mate-burst span { position: absolute; left: 0; top: 0; font-size: calc(18px * var(--s)); opacity: 0; transform: translate(-50%, -50%);
+  animation: cm-mate-fly 1.5s cubic-bezier(.15,.8,.3,1) forwards; }
+.mate-sapphire span { color: #bfe0ff; text-shadow: 0 0 12px #3b8dff, 0 0 24px #2f7bff; }
+.mate-christmas span { color: #fff; text-shadow: 0 0 10px #9fd9ff, 0 0 18px #ffd24a; }
+.mate-christmas span:nth-child(3n) { color: #ffd24a; }
+@keyframes cm-mate-fly { 0%{opacity:0; transform:translate(-50%,-50%) scale(.2)} 15%{opacity:1} 100%{opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 18px)) scale(1) rotate(200deg)} }
+.mate-burst .wave { position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%;
+  border: 3px solid #9fd0ff; box-shadow: 0 0 22px #3b8dff, inset 0 0 18px #3b8dff; opacity: 0; animation: cm-wave 1.3s ease-out forwards; }
+@keyframes cm-wave { 0%{opacity:.95; transform:scale(1)} 100%{opacity:0; transform:scale(22)} }
+#board.theme-christmas .sq.checkmate-king, #board.theme-sapphire .sq.checkmate-king { outline: 3px solid #f4cc65; outline-offset: -4px; z-index: 2; animation: kingPulse .65s ease-in-out infinite alternate; }
+
+/* ---------- game UI chrome in themed mode ---------- */
+body[data-fx] #game .pl { border-radius: 999px; border: 1px solid #e9c66e66; background: #070b1ccc; }
+body[data-fx] #game .pl.turn, body[data-fx] #game .pl.active { border-color: #f3cf6f; box-shadow: 0 0 14px #e9c66e66; }
+body[data-fx] #game .notation { border-radius: 14px; border: 1px solid #e9c66e55; background: #070b1ccc; }
+body[data-fx] #game .game-top button, body[data-fx] #game .game-tools button { border-radius: 999px; border: 1px solid #e9c66e99; background: linear-gradient(#10172e, #070b1c); color: #fff; box-shadow: 0 0 10px #e9c66e33; }
+body[data-fx] #game .coach-panel { border: 1px solid #e9c66e88; background: linear-gradient(135deg, #0a1030ee, #070b1cee); box-shadow: 0 0 22px #e9c66e22; }
+body[data-fx="sapphire"] #game .coach-panel { box-shadow: 0 0 26px #2f7bff55; }
+body[data-fx] #game .eval-bar { box-shadow: 0 0 0 2px #e9c66e99, 0 5px 16px #0008; }

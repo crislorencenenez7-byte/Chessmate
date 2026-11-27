@@ -1,4 +1,4 @@
-const CACHE = 'chessmate-shell-v29';
+const CACHE = 'chessmate-shell-v30';
 
 const CORE = [
   './',
@@ -13,6 +13,10 @@ const CORE = [
   './vendor/chess.js',
   './js/engine.js',
   './js/classify.js',
+  './themes/marble-sapphire.svg',
+  './themes/marble-emerald.svg',
+  './themes/marble-cream.svg',
+  './js/themes.js',
   './engine/stockfish-19-lite-single.js',
   './engine/stockfish-19-lite-single.wasm',
   './pieces/wK.svg', './pieces/wQ.svg',

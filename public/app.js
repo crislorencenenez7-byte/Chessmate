@@ -1,6 +1,7 @@
 import { Chess } from "./vendor/chess.js";
 import { Engine, LEVELS } from "./js/engine.js";
 import { CLASSES, classifyMove, whiteScore, whiteWinPct, scoreText } from "./js/classify.js";
+import { resolveFx, marbleSlice, kingRing, lightningStrike, checkmateBurst } from "./js/themes.js";
 
 const $ = id => document.getElementById(id);
 const FILES = "abcdefgh";
@@ -1080,8 +1081,11 @@ function pieceSrc(p) { return `./pieces/${p.color}${p.type.toUpperCase()}.svg`; 
 function render() {
   if (!G) return;
   const boardEl = $("board");
-  boardEl.classList.remove("theme-christmas","theme-obsidian","theme-aurora","theme-rose","theme-forest");
+  boardEl.classList.remove("theme-christmas","theme-obsidian","theme-aurora","theme-rose","theme-forest","theme-sapphire");
   const boardTheme = G.sharedBoardTheme || economyState.board || "classic";
+    const fx = resolveFx(boardTheme);
+    document.body.dataset.fx = fx || "";
+    boardEl.classList.toggle("theme-sapphire", boardTheme === "board_sapphire");
   if (boardTheme === "classic") boardEl.classList.add("theme-christmas");
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
@@ -1104,11 +1108,16 @@ function render() {
       const p = pos[7 - r][f];
       const sq = document.createElement("div");
       sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
+        if (fx) marbleSlice(sq, col, row);
       sq.dataset.sq = name;
       if (ply && (ply.from === name || ply.to === name)) sq.classList.add("last");
       if (G.sel === name) sq.classList.add("sel");
       if (kingSq === name) sq.classList.add("check");
-      if (vc.isCheckmate() && p?.type === "k" && p.color === vc.turn()) sq.classList.add("checkmate-king");
+      const matedKing = vc.isCheckmate() && p?.type === "k" && p.color === vc.turn();
+        if (matedKing) {
+          sq.classList.add("checkmate-king");
+          if (fx === "sapphire") sq.append(kingRing(p.color, true));
+        }
       if (targets.has(name)) sq.classList.add(targets.get(name) ? "cap" : "dot");
       if (p) {
         const img = document.createElement("img");
@@ -1406,7 +1415,23 @@ function gotoPly(n) {
 }
 
 /* ------------------------------------------------------------------ result overlay */
+function playMateFx() {
+  const g = G;
+  if (!g?.over || g.over.reason !== "checkmate") return;
+  const fx = document.body.dataset.fx;
+  if (!fx) return;
+  setTimeout(() => {
+    if (G !== g || !g.over) return;
+    const board = $("board");
+    const king = board?.querySelector(".sq.checkmate-king");
+    if (!board || !king) return;
+    checkmateBurst(board.parentElement, fx, king);
+    if (fx === "sapphire") lightningStrike(king);
+  }, 160);
+}
+
 function showResultSoon() {
+  playMateFx();
   const g = G;
   setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, 900);
 }

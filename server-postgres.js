@@ -375,6 +375,23 @@ app.post("/api/admin/economy/verify-topup", adminAuth, async (req,res) => {
 });
 
 const COSMETICS = {
+  board_christmas: {
+    type: "board",
+    name: "Christmas Emerald",
+    price: 0,
+    event: true,
+    description: "Limited Christmas Event board with green marble and festive effects.",
+    features: ["Free event board", "Snowfall", "Festive checkmate burst"]
+  },
+  board_sapphire: {
+    type: "board",
+    name: "Royal Sapphire",
+    price: 20,
+    premium: true,
+    deal: true,
+    description: "Blue sapphire marble with a gold frame and royal checkmate effects.",
+    features: ["King Circle", "Lightning Strike", "Checkmate effect"]
+  },
   board_obsidian: { type: "board", name: "Obsidian Royale", price: 15, premium: true, exclusive: true, description: "A refined black-marble and gold chessboard with a crowned king highlight and lightning-strike checkmate finale." },
   board_aurora: { type: "board", name: "Aurora", price: 10, description: "Cool teal and violet board." },
   board_rose: { type: "board", name: "Rosewood", price: 8, description: "Warm rosewood and cream." },
