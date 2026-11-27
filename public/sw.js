@@ -1,4 +1,4 @@
-const CACHE = 'chessmate-shell-v50';
+const CACHE = 'chessmate-shell-v51';
 
 const CORE = [
   './',
