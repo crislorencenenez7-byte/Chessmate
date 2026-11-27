@@ -1,4 +1,4 @@
-const CACHE = 'chessmate-shell-v51';
+const CACHE = 'chessmate-shell-v52';
 
 const CORE = [
   './',
@@ -16,6 +16,19 @@ const CORE = [
   './themes/marble-sapphire.svg',
   './themes/marble-emerald.svg',
   './themes/marble-cream.svg',
+  './js/mate-fx.js',
+  './themes/board-christmas.webp',
+  './themes/board-sapphire.webp',
+  './themes/board-obsidian.webp',
+  './themes/board-aurora.webp',
+  './themes/board-forest.webp',
+  './themes/mate-obsidian.webp',
+  './themes/mate-aurora.webp',
+  './themes/mate-forest.webp',
+  './themes/art-obsidian.webp',
+  './themes/art-aurora.webp',
+  './themes/art-forest.webp',
+  './themes/art-sapphire.webp',
   './js/themes.js',
   './js/pixi-fx.js',
   './vendor/pixi.min.mjs',

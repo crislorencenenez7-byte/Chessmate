@@ -388,14 +388,31 @@ const COSMETICS = {
     name: "Royal Sapphire",
     price: 20,
     premium: true,
+    exclusive: true,
     deal: true,
-    description: "Blue sapphire marble with a gold frame and royal checkmate effects.",
-    features: ["King Circle", "Lightning Strike", "Checkmate effect"]
+    image: "./themes/art-sapphire.webp",
+    description: "Blue sapphire marble with a gold frame, King Circle and a lightning-strike checkmate.",
+    features: ["Lightning Strike checkmate", "King Circle", "Animated profile"]
   },
-  board_obsidian: { type: "board", name: "Obsidian Royale", price: 15, premium: true, exclusive: true, description: "A refined black-marble and gold chessboard with a crowned king highlight and lightning-strike checkmate finale." },
-  board_aurora: { type: "board", name: "Aurora", price: 10, description: "Cool teal and violet board." },
+  board_obsidian: {
+    type: "board", name: "Obsidian Royale", price: 15, premium: true, exclusive: true, deal: true,
+    image: "./themes/art-obsidian.webp",
+    description: "Black marble and gold veins with a gilded frame and a golden-crown checkmate finale.",
+    features: ["Golden Crown checkmate", "Gold ember effects", "Animated profile"]
+  },
+  board_aurora: {
+    type: "board", name: "Aurora", price: 10, premium: true, exclusive: true, deal: true,
+    image: "./themes/art-aurora.webp",
+    description: "Frozen crystal marble under the northern lights with an ice-crown checkmate finale.",
+    features: ["Ice Crown checkmate", "Northern-lights glow", "Animated profile"]
+  },
   board_rose: { type: "board", name: "Rosewood", price: 8, description: "Warm rosewood and cream." },
-  board_forest: { type: "board", name: "Forest", price: 8, description: "Emerald green tournament board." },
+  board_forest: {
+    type: "board", name: "Forests", price: 8, premium: true, exclusive: true, deal: true,
+    image: "./themes/art-forest.webp",
+    description: "Mossy stone and ancient woodland with a sunlit-crown checkmate finale.",
+    features: ["Sunlit Crown checkmate", "Falling leaves & fireflies", "Animated profile"]
+  },
   avatar_crown: { type: "avatar", name: "Royal Crown", price: 6, description: "A golden crown profile emblem." },
   avatar_dragon: { type: "avatar", name: "Dragon", price: 8, description: "A dragon profile emblem." },
   avatar_phoenix: { type: "avatar", name: "Phoenix", price: 8, description: "A phoenix profile emblem." },
@@ -684,9 +701,9 @@ function sharedBoardTheme(room) {
     p.user?.isAdmin === true && p.user?.boardKey === "board_obsidian"
   )) return "board_obsidian";
 
-  if (room.players.some(p =>
-    p.user?.boardKey === "board_sapphire"
-  )) return "board_sapphire";
+  for (const key of ["board_sapphire", "board_aurora", "board_forest"]) {
+    if (room.players.some(p => p.user?.boardKey === key)) return key;
+  }
 
   return null;
 }

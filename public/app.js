@@ -1,7 +1,8 @@
 import { Chess } from "./vendor/chess.js";
 import { Engine, LEVELS } from "./js/engine.js";
 import { CLASSES, classifyMove, whiteScore, whiteWinPct, scoreText } from "./js/classify.js";
-import { resolveFx, marbleSlice, kingRing, lightningStrike, checkmateBurst } from "./js/themes.js";
+import { resolveFx, FX_BY_BOARD, kingRing, lightningStrike, checkmateBurst } from "./js/themes.js";
+import { playThemeMate, MATE_SPLASH_FX, MATE_SPLASH_MS } from "./js/mate-fx.js";
 
 const $ = id => document.getElementById(id);
 const FILES = "abcdefgh";
@@ -1164,9 +1165,6 @@ function render() {
         sq._cmRing = null;
 
         boardSquareCache.set(name, sq);
-        if (fx) marbleSlice(sq, col, row);
-      } else if (fx && (fxChanged || orderChanged)) {
-        marbleSlice(sq, col, row);
       }
 
       sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
@@ -1278,8 +1276,8 @@ function render() {
             { transform: "translate3d(0, 0, 0)" }
           ],
           {
-            duration: fx === "sapphire" ? 600 : 300,
-            easing: fx === "sapphire"
+            duration: fx === "sapphire" ? 600 : MATE_SPLASH_FX.includes(fx) ? 450 : 300,
+            easing: (fx === "sapphire" || MATE_SPLASH_FX.includes(fx))
               ? "cubic-bezier(.22,1,.36,1)"
               : "cubic-bezier(.16,1,.3,1)",
             fill: "both"
@@ -1553,13 +1551,15 @@ function playMateFx() {
     if (!board || !king) return;
     checkmateBurst(board.parentElement, fx, king);
     if (fx === "sapphire") lightningStrike(king);
+    else if (MATE_SPLASH_FX.includes(fx)) playThemeMate(fx);
   }, 160);
 }
 
 function showResultSoon() {
   playMateFx();
   const g = G;
-  setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, 900);
+  const splash = g?.over?.reason === "checkmate" && MATE_SPLASH_FX.includes(document.body.dataset.fx);
+  setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, splash ? MATE_SPLASH_MS - 150 : 900);
 }
 function showResult() {
   const g=G;
@@ -1578,6 +1578,7 @@ function showResult() {
     $("overlay").classList.remove("hidden");
   };
   if(o.reason!=="checkmate"){ reveal(); return; }
+  if(MATE_SPLASH_FX.includes(document.body.dataset.fx)){ reveal(); return; }   // themed finale already played
 
   const board=$("board");
   const king=board?.querySelector(".checkmate-king");
@@ -1801,8 +1802,32 @@ async function loadEconomy() {
   put("home-avatar", AVATAR_GLYPHS[wallet.avatar] || "♞");
   put("profile-avatar", AVATAR_GLYPHS[wallet.avatar] || "♞");
   put("profile-name", user?.username || "Player");
+  applyProfileFx(wallet.board);
   put("profile-stats", `${user?.rating ?? 800} ELO · ${user?.wins ?? 0} wins · ${wallet.diamonds} Diamonds`);
   renderCosmetics(catalog.cosmetics, wallet);
+}
+/* Profile animation that comes with each Exclusive Deals board. */
+const PROFILE_FX = ["obsidian", "aurora", "forest", "sapphire"];
+function applyProfileFx(boardKey) {
+  const fx = PROFILE_FX.includes(FX_BY_BOARD[boardKey]) ? FX_BY_BOARD[boardKey] : "";
+  for (const el of [document.querySelector(".profile-card"), document.querySelector(".mini-profile")]) {
+    if (!el) continue;
+    el.dataset.pfx = fx;
+    el.querySelector(":scope > .pf-fx")?.remove();
+    if (!fx) continue;
+    const layer = document.createElement("div");
+    layer.className = "pf-fx"; layer.setAttribute("aria-hidden", "true");
+    const n = el.classList.contains("profile-card") ? 14 : 6;
+    for (let i = 0; i < n; i++) {
+      const sp = document.createElement("i");
+      sp.style.setProperty("--x", (Math.random() * 100).toFixed(0) + "%");
+      sp.style.setProperty("--d", (Math.random() * 3).toFixed(2) + "s");
+      sp.style.setProperty("--t", (2.8 + Math.random() * 2.4).toFixed(2) + "s");
+      sp.style.setProperty("--s", (0.5 + Math.random() * 0.9).toFixed(2));
+      layer.append(sp);
+    }
+    el.prepend(layer);
+  }
 }
 function renderCosmetics(items, wallet) {
   items = Array.isArray(items) ? items : [];
@@ -1812,10 +1837,15 @@ function renderCosmetics(items, wallet) {
     const owned = wallet.owned.includes(item.key) || item.price === 0;
     const equipped = wallet.avatar === item.key || wallet.board === item.key;
     const rewardLocked = item.reward === true && !owned;
-    return `<article class="cosmetic-card ${item.premium ? "premium" : ""}">
-      <div class="cosmetic-art ${item.type}">${item.type === "board" ? "▦" : (AVATAR_GLYPHS[item.key] || "♟")}</div>
-      <div><span class="cosmetic-type">${item.reward ? "TOURNAMENT REWARD" : item.type === "board" ? "CHESS BOARD" : "PROFILE AVATAR"}${item.premium ? " · EXCLUSIVE" : ""}</span>
-      <h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.description)}</p></div>
+    const art = item.image
+      ? `<div class="cosmetic-art has-img ${item.type}"><img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" decoding="async"></div>`
+      : `<div class="cosmetic-art ${item.type}">${item.type === "board" ? "▦" : (AVATAR_GLYPHS[item.key] || "♟")}</div>`;
+    const feats = Array.isArray(item.features) && item.features.length
+      ? `<ul class="cosmetic-feats">${item.features.map(f => `<li>${escapeHtml(f)}</li>`).join("")}</ul>` : "";
+    return `<article class="cosmetic-card ${item.premium ? "premium" : ""} ${item.exclusive ? "exclusive fx-" + escapeHtml(FX_BY_BOARD[item.key] || "") : ""}">
+      ${art}
+      <div><span class="cosmetic-type">${item.reward ? "TOURNAMENT REWARD" : item.type === "board" ? "CHESS BOARD" : "PROFILE AVATAR"}${item.exclusive ? " · EXCLUSIVE DEAL" : item.premium ? " · EXCLUSIVE" : ""}</span>
+      <h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.description)}</p>${feats}</div>
       <button class="${owned || adminFree ? "ghost" : "primary"}" data-cosmetic="${item.key}" ${equipped || rewardLocked ? "disabled" : ""}>${equipped ? "Equipped" : owned ? "Equip" : adminFree ? "FREE · OWNER/ADMIN" : rewardLocked ? "Earn in Tournament" : `💎 ${item.price}`}</button>
     </article>`;
   };

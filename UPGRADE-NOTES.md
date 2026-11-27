@@ -1,20 +1,17 @@
-# ChessMate Complete Upgrade
+# ChessMate v2.4.0 — Release Notes
 
-This package contains the complete ChessMate project with the premium admin and home-page updates.
+## Exclusive board themes
 
-## Included
-- Premium black-and-gold glassmorphism Admin Dashboard.
-- Refined Announcement Panel and top-of-page global announcement styling.
-- Raining Tacos event controls (Start Event / End Event), existing taco-rain animation, and existing original event sound.
-- Original garden-inspired home-page interaction chime with the existing Sound On / Sound Off control.
-- Admin Update & Release Panel showing the current release version and scheduled-banner status.
-- Existing Update Timer Banner markup and scheduling logic retained for future scheduled releases.
-- Service Worker shell cache version incremented for this package.
+- Obsidian Royale, Aurora, and Forests each include board artwork and a dedicated checkmate finale image/effect.
+- Theme checkmate scenes are implemented in `public/js/mate-fx.js` and use assets from `public/themes/`.
+- Royal Sapphire and Christmas assets remain included.
 
-## Release behavior
-No scheduled countdown is active in this package. The Update Timer Banner and `public/pwa.js` scheduling mechanism remain in the project for future use.
+## Package cleanup
 
-The Admin Update & Release Panel is a status monitor. Publishing a new GitHub Pages build still happens through the repository deployment workflow; the static website cannot directly push source changes to GitHub.
+- Synchronized `package.json` and `package-lock.json` to version 2.4.0.
+- Removed obsolete `*.before*` snapshots and the legacy SQLite database from this distribution.
+- The active backend is PostgreSQL (`server-postgres.js` / `db.js`).
 
-## Audio note
-The home-page chime is an original garden-inspired sound effect, not a recording or recreation of audio from another game. The existing Raining Tacos sound effect is preserved.
+## Deployment
+
+Deploy the backend and static frontend separately when their files change. Configure `DATABASE_URL`, `JWT_SECRET`, and `FRONTEND_ORIGIN` in the backend environment. Never include real `.env` files or credentials in a source archive.

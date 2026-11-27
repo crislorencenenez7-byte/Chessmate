@@ -3,7 +3,10 @@
 
 export const FX_BY_BOARD = {
   board_christmas: "christmas",
-  board_sapphire: "sapphire"
+  board_sapphire: "sapphire",
+  board_obsidian: "obsidian",
+  board_aurora: "aurora",
+  board_forest: "forest"
 };
 
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -236,7 +239,11 @@ export function checkmateBurst(frameEl, fx, squareEl) {
       wrap.append(ring);
     }
   }
-  const glyphs = fx === "christmas" ? ["❄", "✦", "❅", "✧", "★"] : ["✦", "✧", "⚡"];
+  const glyphs = fx === "christmas" ? ["❄", "✦", "❅", "✧", "★"]
+    : fx === "obsidian" ? ["✦", "✧", "♛"]
+    : fx === "aurora" ? ["❄", "✦", "❅"]
+    : fx === "forest" ? ["🍃", "✦", "🌿"]
+    : ["✦", "✧", "⚡"];
   for (let n = 0; n < 18; n++) {
     const p = document.createElement("span");
     const a = (n / 18) * Math.PI * 2 + Math.random() * 0.3, d = 70 + Math.random() * 130;
