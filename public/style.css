@@ -2778,3 +2778,149 @@ html {
     overflow-wrap: anywhere;
   }
 }
+
+
+/* Home layout: compact hero and top economy/profile bar */
+#home > .economy-strip {
+  margin: 8px 0 12px;
+  padding: 10px 13px;
+  min-height: 62px;
+  position: relative;
+  z-index: 2;
+}
+
+#home > .hero {
+  padding: 12px 18px;
+  gap: 16px;
+  min-height: 0;
+}
+
+#home > .hero h1 {
+  font-size: clamp(28px, 4.2vw, 43px);
+  line-height: 1.02;
+  margin: 5px 0 8px;
+}
+
+#home > .hero .hero-text .muted {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+#home > .hero .home-kicker,
+#home > .hero .eyebrow {
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+#home > .hero .hero-board {
+  width: min(150px, 25vw);
+}
+
+.match-player-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  gap: 2px;
+}
+
+.match-player-info .pn {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-player-info .pr {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.match-avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff4d5;
+  font-size: 21px;
+  background: linear-gradient(135deg, #d6b35c, #76572a);
+  border: 1px solid #f0d28a88;
+  box-shadow: 0 3px 12px #0005;
+}
+
+@media (max-width: 560px) {
+  #home > .economy-strip {
+    flex-direction: row;
+    align-items: center;
+    gap: 7px;
+    padding: 8px;
+    margin: 6px 0 10px;
+  }
+
+  #home > .economy-strip .mini-profile {
+    min-width: 0;
+    gap: 7px;
+  }
+
+  #home > .economy-strip .mini-profile b {
+    max-width: 105px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  #home > .economy-strip .mini-profile small {
+    font-size: 10px;
+  }
+
+  #home > .economy-strip .avatar-orb {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    font-size: 20px;
+  }
+
+  #home > .economy-strip .economy-actions {
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+
+  #home > .economy-strip .economy-actions button {
+    flex: 0 1 auto;
+    padding: 8px 7px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  #home > .hero {
+    padding: 10px 12px;
+  }
+
+  #home > .hero h1 {
+    font-size: clamp(27px, 8vw, 36px);
+  }
+
+  #home > .hero .hero-board {
+    display: none;
+  }
+
+  #game .pl {
+    padding: 6px 7px;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  #game .match-avatar {
+    width: 29px;
+    height: 29px;
+    flex-basis: 29px;
+    font-size: 18px;
+  }
+}

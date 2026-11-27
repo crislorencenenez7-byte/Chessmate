@@ -803,8 +803,19 @@ function setPlayers() {
       el.innerHTML = `<img class="ai-opponent-face" data-emotion="neutral" src="./avatars/${bot.id}.svg" alt="${bot.name} avatar"><span class="ai-opponent-info"><span class="ai-opponent-name">${escapeHtml(bot.name)} <small>AI OPPONENT</small></span><span class="ai-opponent-speech">${escapeHtml(bot.voice)}</span><span class="pr">${escapeHtml(n.sub || "")}</span></span>`;
     } else {
       el.classList.remove("ai-opponent-card");
-      el.innerHTML = `<i class="disc ${c}"></i><span class="pn"></span><span class="pr"></span>`;
-      el.querySelector(".pn").textContent = n.name;
+      const glyphs = {
+        avatar_knight:"♞",
+        avatar_crown:"♛",
+        avatar_dragon:"🐉",
+        avatar_phoenix:"🔥",
+        avatar_tournament_laurel:"🏅"
+      };
+      const isMe = !!user?.username && n.name === user.username;
+      const avatarKey = isMe ? (economyState?.avatar || "avatar_knight") : "avatar_knight";
+      const avatarGlyph = glyphs[avatarKey] || "♞";
+
+      el.innerHTML = `<span class="match-avatar">${avatarGlyph}</span><span class="match-player-info"><span class="pn"></span><span class="pr"></span></span>`;
+      el.querySelector(".pn").textContent = n.name || "Player";
       el.querySelector(".pr").textContent = n.sub || "";
     }
   };
