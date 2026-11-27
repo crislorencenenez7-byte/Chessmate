@@ -2505,10 +2505,18 @@ body[data-fx="sapphire"] .board-frame::before {
 }
 body[data-fx="sapphire"] .board-frame::after {
   inset: -22px; padding: 6px; border-radius: 16px;
-  background: linear-gradient(90deg, #3b8dff00, #8fc6ff, #3b8dff00) 0 0 / 220% 100%;
-  animation: cm-edge-glow 3.2s linear infinite;
+  background: linear-gradient(90deg, #3b8dff00, #8fc6ff, #3b8dff00);
+  animation: cm-edge-glow 3.2s ease-in-out infinite alternate;
 }
-@keyframes cm-edge-glow { to { background-position: -220% 0; } }
+@keyframes cm-edge-glow {
+  from { opacity: .55; }
+  to { opacity: 1; }
+}
+
+/* Sapphire performance: lighter piece shadows */
+#board.theme-sapphire .sq .piece {
+  filter: drop-shadow(0 1px 1px #0009);
+}
 #board.theme-sapphire .sq.last::before { background: #6fb6ff55; }
 
 /* King Circle */
@@ -2558,3 +2566,29 @@ body[data-fx] #game .game-top button, body[data-fx] #game .game-tools button { b
 body[data-fx] #game .coach-panel { border: 1px solid #e9c66e88; background: linear-gradient(135deg, #0a1030ee, #070b1cee); box-shadow: 0 0 22px #e9c66e22; }
 body[data-fx="sapphire"] #game .coach-panel { box-shadow: 0 0 26px #2f7bff55; }
 body[data-fx] #game .eval-bar { box-shadow: 0 0 0 2px #e9c66e99, 0 5px 16px #0008; }
+
+/* Royal Sapphire: mobile board fit */
+@media (max-width: 700px) {
+  body[data-fx="sapphire"] {
+    --bs: min(
+      calc(100vw - var(--pad) - var(--pad) - 48px),
+      calc(100vh - 280px),
+      640px
+    );
+  }
+
+  @supports (height: 100dvh) {
+    body[data-fx="sapphire"] {
+      --bs: min(
+        calc(100vw - var(--pad) - var(--pad) - 48px),
+        calc(100dvh - 280px),
+        640px
+      );
+    }
+  }
+
+  body[data-fx="sapphire"] .board-frame::before,
+  body[data-fx="sapphire"] .board-frame::after {
+    inset: -12px;
+  }
+}
