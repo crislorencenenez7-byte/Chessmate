@@ -67,8 +67,13 @@
 
   function showUpdate(config) {
     if (!updateBanner) return;
-    updateBanner.hidden = true;
-    updateBanner.style.display = "none";
+    updateTitle.textContent = config.title || "ChessMate Scheduled Update";
+    updateDate.textContent = config.date || new Date(config.scheduledAt).toLocaleString();
+    updateDescription.textContent = Array.isArray(config.description)
+      ? config.description.join(" • ")
+      : String(config.description || "ChessMate improvements and new features");
+    updateBanner.hidden = false;
+    updateBanner.style.display = "block";
   }
 
   function activateWaitingWorker() {

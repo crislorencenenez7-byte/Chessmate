@@ -30,7 +30,7 @@
 <section id="update-banner" class="update-banner" hidden aria-live="polite">
   <div class="update-banner-top">
     <strong id="update-title">ChessMate Scheduled Update</strong>
-    <span class="update-timer">Timer: <b id="update-countdown">35:00</b></span>
+    <span class="update-timer">Timer: <b id="update-countdown">15:00</b></span>
   </div>
   <p><strong>Date:</strong> <time id="update-date"></time></p>
   <p><strong>Description:</strong> <span id="update-description"></span></p>
@@ -64,12 +64,16 @@
     <div class="hero-board" id="hero-board" aria-hidden="true"></div>
   </div>
 
+  <div class="economy-strip">
+    <div class="mini-profile"><span id="home-avatar" class="avatar-orb">♞</span><span><b id="home-username">Guest Player</b><small id="home-diamonds">0 Diamonds</small></span></div>
+    <div class="economy-actions"><button id="open-shop" class="primary small">💎 Diamond Shop</button><button id="open-profile" class="ghost small">Profile & Clan</button></div>
+  </div>
   <div class="home-section-heading">
     <div>
       <span class="section-overline">YOUR PLAYGROUND</span>
       <h2>Choose your game</h2>
     </div>
-    <span class="mode-count">08 MODES</span>
+    <span class="mode-count">09 MODES</span>
   </div>
   <div class="mode-grid">
     <button class="mode-card" data-mode="ranked">
@@ -100,10 +104,14 @@
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       <b>Match History</b><small>Your recent games</small>
     </button>
+    <button class="mode-card" data-mode="clan">
+      <svg viewBox="0 0 24 24"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20M10 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 4a3 3 0 0 1 0 6M18 14a4 4 0 0 1 3 4v2"/></svg>
+      <b>Clans</b><small>Create, join and climb Clan ranks</small>
+    </button>
     <button class="mode-card tournament-mode-card" data-mode="tournament">
       <svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
       <b>Tournament Mode</b><small>Compete with the community</small>
-      <span class="tournament-tag">COMING SOON</span>
+      <span class="tournament-tag">CLAN 3–5 PLAYERS</span>
     </button>
   </div>
   <div id="home-message" class="notice"></div>
@@ -232,19 +240,46 @@
 </section>
 
 
+<!-- DIAMOND SHOP -->
+<section id="shop" class="screen shop-screen">
+  <button class="ghost back">← Menu</button>
+  <div class="shop-heading"><div><span class="section-overline">CHESSMATE COSMETICS</span><h2>Diamond Shop</h2><p class="muted">₱10 top-up = 2 Diamonds. Premium cosmetics are permanent unlocks.</p></div><div class="diamond-balance">💎 <b id="shop-balance">0</b></div></div>
+  <div class="topup-card"><div><b>Starter top-up</b><small>₱10 · 2 Diamonds</small></div><button id="topup-10" class="primary">Request Top-up</button></div>
+  <p id="topup-note" class="notice">Payment processing is not connected yet. A request stays pending until payment is verified.</p>
+  <h3>Diamond Transaction History</h3><div id="diamond-history" class="list">Loading…</div>
+  <h3>Exclusive Deals</h3><p class="muted">Special premium designs. Owner and Admin accounts receive free access.</p>
+  <div id="exclusive-grid" class="cosmetic-grid">Loading Exclusive Deals…</div>
+  <h3>Profile & Board Cosmetics</h3><div id="cosmetic-grid" class="cosmetic-grid">Loading cosmetics…</div>
+</section>
+<!-- PLAYER PROFILE -->
+<section id="profile" class="screen">
+  <button class="ghost back">← Menu</button><h2>Player Profile</h2>
+  <div class="profile-card"><span id="profile-avatar" class="avatar-large">♞</span><div><h3 id="profile-name">Guest</h3><p id="profile-stats" class="muted">Log in to view your profile.</p></div></div>
+  <div id="profile-clan" class="clan-info"></div>
+</section>
+
+<!-- CLANS: independent from tournaments -->
+<section id="clan" class="screen">
+  <button class="ghost back">← Menu</button>
+  <div class="tournament-panel clan-panel">
+    <p class="tournament-overline">CHESSMATE COMMUNITY</p>
+    <h2>Clans</h2>
+    <p class="muted">Create or join a Clan. Clan Wins, Losses and Win Rate are tracked separately from Tournament results.</p>
+    <h3>Clan Leaderboard</h3><div id="clan-leaderboard" class="list">Loading…</div>
+  </div>
+</section>
+
 <!-- TOURNAMENT MODE -->
 <section id="tournament" class="screen tournament-screen">
   <button class="ghost back">← Menu</button>
   <div class="tournament-panel">
     <div class="tournament-emblem" aria-hidden="true">♜</div>
     <p class="tournament-overline">CHESSMATE COMMUNITY</p>
-    <h2>Tournament Mode</h2>
-    <div class="coming-soon-label">COMING SOON</div>
-    <div class="clan-waiting"><span class="clan-status-dot"></span>
-      <strong>WAITING FOR CLAN MODE</strong>
-    </div>
-    <p class="muted">Tournament features are being prepared. Clan Mode will be announced here when it is ready.</p>
-    <div class="tournament-snowflake" aria-hidden="true">❄ ❄ ❄</div>
+    <h2>Clan Tournament</h2>
+    <p class="muted">Register your Clan here after building a roster of 3–5 players in the separate Clans section. Six registered Clans enter a randomized championship bracket.</p>
+    <button id="tournament-register" class="primary">Register Clan for Tournament</button>
+    <div id="tournament-status" class="notice"></div>
+    <div class="tournament-rewards"><b>Champion rewards</b><p>Tournament Laurel profile emblem + Slate Arena chessboard. These are modest tournament-only cosmetics, separate from premium Diamond Shop designs.</p></div><h3>Registered Clans · <span id="tournament-count">0/6</span></h3><div id="tournament-entries" class="list">Loading…</div><h3>Championship Bracket</h3><div id="tournament-bracket" class="list">Waiting for six registered Clans…</div>
   </div>
 </section>
 

@@ -2322,3 +2322,59 @@ body {
   accent-color: #65c987;
   cursor: pointer;
 }
+
+
+/* ------------------------------------------------------------------ Diamonds, profile, cosmetics and clan tournament */
+.economy-strip{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:18px 0 24px;padding:13px 16px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;background:rgba(255,255,255,.035)}
+.mini-profile{display:flex;align-items:center;gap:11px}.mini-profile b,.mini-profile small{display:block}.mini-profile small{color:var(--muted);margin-top:3px}
+.avatar-orb,.avatar-large{display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#d6b35c,#76572a);color:#fff;font-size:24px;width:44px;height:44px;box-shadow:0 4px 18px #0004}
+.economy-actions{display:flex;gap:8px;flex-wrap:wrap}.primary.small,.ghost.small{padding:9px 13px}
+.shop-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:12px 0 20px}.shop-heading h2{margin:5px 0}.diamond-balance{font-size:21px;padding:10px 15px;border-radius:14px;background:rgba(102,190,255,.12);border:1px solid rgba(102,190,255,.3);white-space:nowrap}
+.topup-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-radius:16px;background:linear-gradient(110deg,rgba(47,123,173,.22),rgba(160,119,45,.16));border:1px solid rgba(120,180,230,.28)}
+.topup-card b,.topup-card small{display:block}.topup-card small{color:var(--muted);margin-top:4px}
+.cosmetic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px;margin:20px 0}
+.cosmetic-card{display:flex;flex-direction:column;gap:10px;padding:15px;border-radius:16px;border:1px solid var(--line,rgba(255,255,255,.12));background:rgba(255,255,255,.035)}
+.cosmetic-card.premium{border-color:rgba(224,183,91,.7);background:linear-gradient(145deg,rgba(169,126,45,.16),rgba(255,255,255,.035))}
+.cosmetic-art{height:86px;display:grid;place-items:center;border-radius:12px;font-size:48px;background:linear-gradient(135deg,#202b3d,#52617b);color:#f2d48a}
+.cosmetic-art.board{background:repeating-conic-gradient(#d8c39b 0 25%,#54412f 0 50%) 50%/36px 36px;color:#fff;text-shadow:0 2px 5px #000}
+.cosmetic-type{font-size:10px;letter-spacing:1.2px;color:#d6b35c;font-weight:800}.cosmetic-card h3{margin:5px 0}.cosmetic-card p{font-size:13px;color:var(--muted);min-height:38px}
+.profile-card{display:flex;align-items:center;gap:16px;padding:18px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;background:rgba(255,255,255,.035);margin:16px 0}.avatar-large{width:72px;height:72px;font-size:38px}
+.clan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}.clan-info{margin:16px 0;padding:15px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:14px}
+.clan-info .row-item{padding:8px 0}.clan-info h3{margin:0 0 7px}.tournament-panel>h3{margin-top:20px}
+#board.theme-obsidian .sq.light{background:#d7c8a2!important}#board.theme-obsidian .sq.dark{background:#302c2b!important}
+#board.theme-aurora .sq.light{background:#b9d6d0!important}#board.theme-aurora .sq.dark{background:#315d68!important}
+#board.theme-rose .sq.light{background:#f0d7cb!important}#board.theme-rose .sq.dark{background:#86515a!important}
+#board.theme-forest .sq.light{background:#d9e0b9!important}#board.theme-forest .sq.dark{background:#416447!important}
+#board.theme-obsidian .sq.checkmate-king{outline:4px solid #f4cc65;outline-offset:-5px;z-index:2;animation:kingPulse .65s ease-in-out infinite alternate}
+#board.king-burst:after{content:"✦  ✧  ✦  ✧  ✦";position:absolute;inset:38% 0 auto;text-align:center;color:#ffe08a;font-size:clamp(20px,6vw,48px);text-shadow:0 0 20px #f3b93e;pointer-events:none;animation:kingBurst 1.15s ease-out forwards}
+#board{position:relative}
+@keyframes kingPulse{from{box-shadow:0 0 0 0 rgba(255,207,93,.25)}to{box-shadow:0 0 22px 9px rgba(255,207,93,.85)}}
+@keyframes kingBurst{0%{opacity:0;transform:scale(.25)}25%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(1.8)}}
+@media(max-width:560px){.economy-strip{align-items:flex-start;flex-direction:column}.economy-actions{width:100%}.economy-actions button{flex:1}.shop-heading{align-items:flex-start}.topup-card{align-items:flex-start;flex-direction:column}}
+
+.tournament-rewards{margin:16px 0;padding:14px;border:1px solid rgba(214,179,92,.35);background:rgba(214,179,92,.07);border-radius:13px}.tournament-rewards p{margin:6px 0 0;color:var(--muted);font-size:13px}
+
+.pairing-card{padding:12px;margin:10px 0;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line,rgba(255,255,255,.12))}.pairing-card b,.pairing-card small{display:block}.pairing-card small{margin-top:7px;color:var(--muted)}
+
+
+/* Clan record and tournament bracket */
+.clan-record{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0}.clan-record b{padding:7px 10px;border:1px solid var(--line,rgba(255,255,255,.12));border-radius:9px;font-size:12px}.clan-panel>h3{margin-top:22px}.admin-match-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.admin-match-actions button{flex:1}.positive{color:#73d69b}.negative{color:#ef8a8a}
+
+/* Premium checkmate: king circle + lightning strike + CHECKMATE announcement */
+.sq.checkmate-king{z-index:4}
+.sq.checkmate-king::before{content:"";position:absolute;inset:9%;border:3px solid #ffe17a;border-radius:50%;box-shadow:0 0 9px #ffd75a,0 0 20px #ffb52b;z-index:4;pointer-events:none;animation:kingCirclePulse .55s ease-in-out infinite alternate}
+#board.king-burst::before{content:"⚡";position:absolute;z-index:20;left:50%;top:2%;transform:translateX(-50%);font-size:clamp(64px,18vw,150px);color:#fff4a6;text-shadow:0 0 8px #fff,0 0 25px #ffe34f,0 0 55px #f4a623;pointer-events:none;animation:lightningStrike .85s ease-out forwards}
+.checkmate-announcement{position:absolute;z-index:21;left:50%;top:43%;transform:translate(-50%,-50%);padding:10px 20px;border:2px solid #ffe17a;border-radius:12px;background:rgba(8,12,20,.88);color:#fff1a8;font-size:clamp(22px,6vw,42px);font-weight:1000;letter-spacing:.12em;text-shadow:0 0 14px #ffbf35;box-shadow:0 0 30px #f5b83b88;pointer-events:none;animation:checkmateFlash 2.5s ease-out forwards;white-space:nowrap}
+#board.king-burst:after{content:"✦  CHECKMATE  ✦";position:absolute;z-index:19;inset:62% 0 auto;text-align:center;color:#ffe08a;font-size:clamp(13px,3.8vw,25px);font-weight:900;letter-spacing:.12em;text-shadow:0 0 20px #f3b93e;pointer-events:none;animation:kingBurst 1.5s ease-out forwards}
+@keyframes kingCirclePulse{from{box-shadow:0 0 0 0 #ffdc6680}to{box-shadow:0 0 18px 7px #ffca45}}
+@keyframes lightningStrike{0%{opacity:0;top:-25%;filter:brightness(2)}25%{opacity:1;top:6%}55%{opacity:1;filter:brightness(2.5)}100%{opacity:0;top:42%;filter:brightness(1)}}
+@keyframes checkmateFlash{0%{opacity:0;transform:translate(-50%,-50%) scale(.45)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+
+
+/* Christmas chessboard is part of the seasonal update, not an Exclusive Deal. */
+#board.theme-christmas{border:3px solid #c8a45b;box-shadow:0 0 0 2px #174a32,0 8px 30px #0005}
+#board.theme-christmas .sq.light{background:#f1e8d3!important}
+#board.theme-christmas .sq.dark{background:#176b43!important}
+#board.theme-christmas .sq.last::before{background:rgba(207,54,66,.48)}
+#board.theme-christmas .sq.sel::before{background:rgba(231,190,83,.62)}
+#board.theme-christmas .sq.check::before{background:radial-gradient(circle,#df303dcc 0,#bb283a99 40%,transparent 74%)}

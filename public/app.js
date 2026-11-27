@@ -543,7 +543,10 @@ function setUser(u) {
   if (adminButton) adminButton.hidden = !adminAuthenticated;
 
   if (!adminAuthenticated) clearAdminCoach();
+  const homeName = $("home-username"); if (homeName) homeName.textContent = u?.username || "Guest Player";
   if (token && socket.connected) socket.emit("authenticate", token);
+  if (token) loadEconomy().catch(() => {});
+  else { $("home-diamonds").textContent = "Log in for Diamonds"; $("home-avatar").textContent = "♞"; }
 }
 
 async function ensureSocketAuth() {
@@ -1077,6 +1080,13 @@ function pieceSrc(p) { return `./pieces/${p.color}${p.type.toUpperCase()}.svg`; 
 function render() {
   if (!G) return;
   const boardEl = $("board");
+  boardEl.classList.remove("theme-christmas","theme-obsidian","theme-aurora","theme-rose","theme-forest");
+  const boardTheme = economyState.board || "classic";
+  if (boardTheme === "classic") boardEl.classList.add("theme-christmas");
+  if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
+  if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
+  if (boardTheme === "board_rose") boardEl.classList.add("theme-rose");
+  if (boardTheme === "board_forest") boardEl.classList.add("theme-forest");
   const vc = viewChess();
   const pos = vc.board();
   const ply = G.view > 0 ? G.plies[G.view - 1] : null;
@@ -1098,6 +1108,7 @@ function render() {
       if (ply && (ply.from === name || ply.to === name)) sq.classList.add("last");
       if (G.sel === name) sq.classList.add("sel");
       if (kingSq === name) sq.classList.add("check");
+      if (vc.isCheckmate() && p?.type === "k" && p.color === vc.turn()) sq.classList.add("checkmate-king");
       if (targets.has(name)) sq.classList.add(targets.get(name) ? "cap" : "dot");
       if (p) {
         const img = document.createElement("img");
@@ -1412,6 +1423,17 @@ function showResult() {
   $("result-detail").textContent = detail;
   $("result-rating").textContent = o.ratingLine || "";
   $("overlay").classList.remove("hidden");
+  if (o.reason === "checkmate") {
+    const board=$("board");
+    board.classList.remove("king-burst");
+    void board.offsetWidth;
+    board.classList.add("king-burst");
+    const announcement=document.createElement("div");
+    announcement.className="checkmate-announcement";
+    announcement.textContent="CHECKMATE";
+    board.append(announcement);
+    setTimeout(()=>announcement.remove(),2600);
+  }
 }
 
 /* ------------------------------------------------------------------ board input */
@@ -1609,6 +1631,71 @@ function closeGameReview() {
   $("review-panel").hidden = true;
 }
 
+
+// ------------------------------------------------------------------ Diamonds, profile cosmetics, clans and tournament UI
+let economyState = { diamonds:0, avatar:"avatar_knight", board:"classic", owned:[] };
+const AVATAR_GLYPHS = { avatar_knight:"♞", avatar_crown:"♛", avatar_dragon:"🐉", avatar_phoenix:"🔥", avatar_tournament_laurel:"🏅" };
+async function loadEconomy() {
+  if (!token) return;
+  const [wallet,catalog,ledger] = await Promise.all([api("/api/economy/me"),api("/api/economy/catalog"),api("/api/economy/ledger")]);
+  economyState = {...wallet};
+  $("diamond-history").innerHTML=ledger.transactions.map(t=>`<div class="row-item"><b>${escapeHtml(t.reason)}</b><strong class="${t.amount>0?"positive":"negative"}">${t.amount>0?"+":""}${t.amount} 💎</strong><small>${new Date(t.created_at).toLocaleString()}</small></div>`).join("") || "No Diamond transactions yet.";
+  $("home-diamonds").textContent = `${wallet.diamonds} Diamonds`;
+  $("shop-balance").textContent = wallet.diamonds;
+  $("home-avatar").textContent = AVATAR_GLYPHS[wallet.avatar] || "♞";
+  $("profile-avatar").textContent = AVATAR_GLYPHS[wallet.avatar] || "♞";
+  $("profile-name").textContent = user?.username || "Player";
+  $("profile-stats").textContent = `${user?.rating ?? 800} ELO · ${user?.wins ?? 0} wins · ${wallet.diamonds} Diamonds`;
+  renderCosmetics(catalog.cosmetics, wallet);
+}
+function renderCosmetics(items, wallet) {
+  const renderCard = item => {
+    const adminFree = wallet.isAdmin === true && item.exclusive === true;
+    const owned = wallet.owned.includes(item.key) || item.price === 0;
+    const equipped = wallet.avatar === item.key || wallet.board === item.key;
+    const rewardLocked = item.reward === true && !owned;
+    return `<article class="cosmetic-card ${item.premium ? "premium" : ""}">
+      <div class="cosmetic-art ${item.type}">${item.type === "board" ? "▦" : (AVATAR_GLYPHS[item.key] || "♟")}</div>
+      <div><span class="cosmetic-type">${item.reward ? "TOURNAMENT REWARD" : item.type === "board" ? "CHESS BOARD" : "PROFILE AVATAR"}${item.premium ? " · EXCLUSIVE" : ""}</span>
+      <h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.description)}</p></div>
+      <button class="${owned || adminFree ? "ghost" : "primary"}" data-cosmetic="${item.key}" ${equipped || rewardLocked ? "disabled" : ""}>${equipped ? "Equipped" : owned ? "Equip" : adminFree ? "FREE · OWNER/ADMIN" : rewardLocked ? "Earn in Tournament" : `💎 ${item.price}`}</button>
+    </article>`;
+  };
+  $("exclusive-grid").innerHTML=items.filter(item=>item.exclusive===true).map(renderCard).join("") || "No Exclusive Deals available.";
+  $("cosmetic-grid").innerHTML=items.filter(item=>item.exclusive!==true).map(renderCard).join("") || "No cosmetics available.";
+}
+async function openShop() {
+  if (!token) { toast("Log in to use the Diamond Shop."); authMode="login"; updateAuth(); show("auth"); return; }
+  show("shop");
+  try { await loadEconomy(); } catch(e) { $("cosmetic-grid").textContent=e.message; }
+}
+async function loadClan() {
+  if (!token) { $("clan-info").textContent="Log in to create or join a clan."; return; }
+  const d=await api("/api/clans/me");
+  if (!d.clan) { $("clan-info").textContent="You are not in a clan yet. Create one or join with an invite code."; $("profile-clan").textContent="No clan yet."; return; }
+  const c=d.clan;
+  const roster=c.members.map((m,i)=>`<div class="row-item"><span>${i+1}</span><b>${escapeHtml(m.username)}</b><strong>${m.rating} ELO</strong></div>`).join("");
+  $("clan-info").innerHTML=`<h3>${escapeHtml(c.name)}</h3><p>Invite code: <b>${escapeHtml(c.inviteCode)}</b> · ${c.members.length}/5 players</p><div class="clan-record"><b>${c.wins} Wins</b><b>${c.losses} Losses</b><b>${c.winRate}% Win Rate</b></div>${roster}`;
+  $("profile-clan").innerHTML=`<b>${escapeHtml(c.name)}</b><p>${c.wins}W · ${c.losses}L · ${c.winRate}% Win Rate</p><p>Invite code: ${escapeHtml(c.inviteCode)}</p>${roster}`;
+}
+async function loadClanLeaderboard() {
+  try {
+    const d=await api("/api/clans/leaderboard");
+    $("clan-leaderboard").innerHTML=d.clans.map((c,i)=>`<div class="row-item"><b>#${i+1} ${escapeHtml(c.name)}</b><span>${c.wins}W · ${c.losses}L</span><strong>${c.win_rate}% WR</strong><small>${c.members} members</small></div>`).join("") || "No registered Clans yet.";
+  } catch(e) { $("clan-leaderboard").textContent=e.message; }
+}
+async function loadTournamentEntries() {
+  try {
+    const d=await api("/api/tournament/entries");
+    const entries=d.entries.map(e=>`<div class="row-item"><b>${escapeHtml(e.name)}</b><span>${e.roster.length} players</span><small>${e.roster.map((p,i)=>`#${i+1} ${escapeHtml(p.username)} (${p.rating})`).join(" · ")}</small></div>`).join("") || "No clans registered yet.";
+    $("tournament-count").textContent=`${d.registeredCount}/6`;
+    $("tournament-entries").innerHTML=entries;
+    if (!d.matches.length) { $("tournament-bracket").textContent=`${d.registeredCount}/6 Clans registered. The championship bracket is created when six Clans have registered.`; return; }
+    const roundNames={1:"Opening Round",2:"Semi-Finals",3:"Championship"};
+    $("tournament-bracket").innerHTML=d.matches.map(m=>`<article class="pairing-card"><b>${roundNames[m.round]} · Match ${m.matchNumber}</b><p>${escapeHtml(m.clanA||"TBD")} vs ${escapeHtml(m.clanB||"TBD")}</p>${m.boards.map(x=>`<small>Board ${x.rank}: ${escapeHtml(x.playerA)} (${x.eloA}) vs ${escapeHtml(x.playerB)} (${x.eloB})</small>`).join("")}${m.winner?`<strong>Winner: ${escapeHtml(m.winner)}</strong>`:m.clanA&&m.clanB?`<small>Awaiting match result</small>`:`<small>Waiting for previous round</small>`}${user?.isAdmin && m.status==="pending" && m.clanA && m.clanB?`<div class="admin-match-actions"><button class="small ghost" data-tourney-winner="${m.id}" data-winner-clan="${d.entries.find(x=>x.name===m.clanA)?.id||""}">${escapeHtml(m.clanA)} wins</button><button class="small ghost" data-tourney-winner="${m.id}" data-winner-clan="${d.entries.find(x=>x.name===m.clanB)?.id||""}">${escapeHtml(m.clanB)} wins</button></div>`:""}</article>`).join("")+(d.champion?`<h3>🏆 Champion: ${escapeHtml(d.champion)}</h3>`:"");
+  } catch(e) { $("tournament-entries").textContent=e.message; }
+}
+
 /* ------------------------------------------------------------------ wire up UI */
 function setupUI() {
   // hero decoration (SVG pieces, no Unicode glyphs)
@@ -1616,11 +1703,36 @@ function setupUI() {
   $("hero-board").innerHTML = hero.map((p, i) =>
     `<div style="background:${((i % 4) + Math.floor(i / 4)) % 2 ? "var(--dark)" : "var(--light)"}">${p ? `<img src="./pieces/${p}.svg" alt="">` : ""}</div>`).join("");
 
+  $("open-shop").onclick = openShop;
+  $("open-profile").onclick = async () => { if (!token) { toast("Log in to view your profile."); authMode="login"; updateAuth(); show("auth"); return; } show("profile"); try { await loadEconomy(); await loadClan(); } catch(e) { toast(e.message); } };
+  $("topup-10").onclick = async () => {
+    if (!token) return toast("Log in first.");
+    try { const d=await api("/api/economy/topup",{method:"POST",body:"{}"}); $("topup-note").textContent=`Request ${d.reference} created: ₱${d.php} for ${d.diamonds} Diamonds. Pending payment verification; balance is unchanged.`; }
+    catch(e) { $("topup-note").textContent=e.message; }
+  };
+  const handleCosmeticClick = async e => {
+    const b=e.target.closest("[data-cosmetic]"); if (!b) return;
+    const key=b.dataset.cosmetic, owned=economyState.owned.includes(key) || key==="avatar_knight";
+    try {
+      const d=await api(owned?"/api/economy/equip":"/api/economy/purchase",{method:"POST",body:JSON.stringify({key})});
+      economyState={...economyState,...d};
+      await loadEconomy();
+      toast(owned?"Cosmetic equipped!":"Cosmetic purchased and equipped!");
+    } catch(err) { toast(err.message); }
+  };
+  $("cosmetic-grid").onclick = handleCosmeticClick;
+  $("exclusive-grid").onclick = handleCosmeticClick;
+  $("clan-create").onclick = async () => { try { await api("/api/clans",{method:"POST",body:JSON.stringify({name:$("clan-name").value})}); await loadClan(); await loadClanLeaderboard(); toast("Clan created!"); } catch(e) { toast(e.message); } };
+  $("clan-join").onclick = async () => { try { await api("/api/clans/join",{method:"POST",body:JSON.stringify({code:$("clan-code").value})}); await loadClan(); await loadClanLeaderboard(); toast("Joined clan!"); } catch(e) { toast(e.message); } };
+  $("tournament-register").onclick = async () => { try { const d=await api("/api/tournament/register",{method:"POST",body:"{}"}); $("tournament-status").textContent=`${d.clan.name} registered (${d.registeredClans}/6). ${d.format}`; await loadTournamentEntries(); } catch(e) { $("tournament-status").textContent=e.message; } };
+  $("tournament-bracket").onclick = async e => { const b=e.target.closest("[data-tourney-winner]"); if(!b)return; try { await api("/api/admin/tournament/result",{method:"POST",body:JSON.stringify({matchId:Number(b.dataset.tourneyWinner),winnerClanId:Number(b.dataset.winnerClan)})}); await loadTournamentEntries(); await loadClanLeaderboard(); toast("Tournament result saved."); } catch(err) { toast(err.message); } };
+
   document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => {
     const m = b.dataset.mode;
     if (m === "friends") { if (!ONLINE_ENABLED) return toast("Online play needs a hosted ChessMate backend. Local games still work."); $("friends-status").textContent = ""; show("friends"); }
     else if (m === "ranked") { if (!ONLINE_ENABLED) return toast("Ranked play needs a hosted ChessMate backend."); show("ranked"); }
-    else if (m === "tournament") show("tournament");
+    else if (m === "clan") { show("clan"); if (token) loadClan().catch(()=>{}); loadClanLeaderboard(); }
+    else if (m === "tournament") { show("tournament"); loadTournamentEntries(); }
     else if (m === "ai") show("ai-setup");
     else if (m === "leaderboard") { if (!ONLINE_ENABLED) return toast("Leaderboard needs a hosted ChessMate backend."); loadLeaderboard(); show("leaderboard"); }
     else if (m === "history") {

@@ -1,13 +1,18 @@
 {
-  "enabled": false,
-  "scheduledAt": null,
-  "date": "",
-  "title": "ChessMate v2.1.1",
+  "enabled": true,
+  "scheduledAt": "2026-11-27T06:49:31.998Z",
+  "date": "Nov 27, 2026, 2:49 PM (Philippines time)",
+  "title": "ChessMate v2.3.0 Scheduled Update",
   "description": [
-    "Premium Admin Dashboard and Announcement UI",
-    "Garden-inspired home interaction sound",
-    "Raining Tacos event animation and original sound effects",
-    "Admin release status monitor"
+    "Separate Clan dashboard: Wins, Losses, Win Rate and Leaderboard",
+    "Six-Clan Championship: 1 registered Clan plus 5 random registered Clans",
+    "Clan Tournament: 3-5 players per Clan, highest ELO versus highest ELO",
+    "Diamonds Wallet and transaction history",
+    "Exclusive Deals: 15-Diamond Obsidian Royale board; free access for Owner and Admin",
+    "Checkmate King Circle, Lightning Strike and CHECKMATE announcement",
+    "Christmas Theme including chessboard",
+    "Website and PWA improvements"
   ],
-  "version": "2.1.1"
+  "version": "2.3.0",
+  "countdownMinutes": 15
 }

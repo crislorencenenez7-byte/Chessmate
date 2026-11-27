@@ -69,3 +69,50 @@ For Pages, open repository **Settings → Pages → Build and deployment → Sou
 - The opponent also comments after its own move, with different reactions for checks, captures, and ordinary moves.
 - The Raining Tacos event now plays an original four-note synthesized jingle while the event is active on the Home screen. It stops outside the Home screen and requires a user tap first so mobile browsers can unlock audio.
 - The uploaded `ChessMate.zip` did not contain an MP3/OGG/WAV audio file. Therefore this package does not include or claim to use the separately mentioned supplied recording.
+
+
+## ChessMate 2.2.0 — Diamonds, Cosmetics, Clans & Tournament
+
+### Added
+- Diamond wallet stored in PostgreSQL. The displayed starter rate is **₱10 = 2 Diamonds**.
+- Server-authoritative cosmetic purchases and permanent ownership inventory.
+- Board themes: Obsidian Royale (15 Diamonds, premium checkmate king-burst), Aurora, Rosewood and Forest.
+- Profile avatar cosmetics: Royal Crown, Dragon and Phoenix, plus the default Knight.
+- Player profile panel and equipped cosmetic persistence.
+- Clan creation and invite-code joining, with a maximum of five members.
+- Tournament registration requires a 3–5 player clan.
+- Tournament seeding sorts each clan by ELO and pairs equal roster-size divisions rank-for-rank (highest vs highest, then second vs second).
+- Tournament-only Laurel profile emblem and Slate Arena board reward cosmetics; staff can grant these through the admin API.
+
+### Important payment integration note
+The top-up button creates a **pending payment request** and does not credit Diamonds. No payment provider or webhook credentials were present in the supplied project, so this upgrade deliberately does not pretend to process GCash/cards or mark an unverified payment as paid. After checking a real payment through your chosen provider, an authenticated admin can verify the request with:
+
+`POST /api/admin/economy/verify-topup` with JSON `{ "reference": "CM-..." }`
+
+The verification endpoint credits exactly 2 Diamonds once per pending ₱10 request. Connect a real payment provider webhook before accepting live payments.
+
+Tournament reward grant endpoint (admin only):
+
+`POST /api/admin/tournament/reward` with JSON `{ "username": "player", "key": "avatar_tournament_laurel" }`
+
+or use `board_tournament_slate`.
+
+### Deployment
+- The app uses `server-postgres.js` and `db.js` as configured in `package.json`.
+- On startup, `initDb()` creates the new tables and adds the wallet/profile columns to existing users. No manual destructive migration is required.
+- Set `DATABASE_URL` and `JWT_SECRET` as usual, then deploy/restart the backend.
+- Restart the frontend deployment too so the updated `public/` files are served.
+
+
+## ChessMate v2.3.0 update
+
+- Clan is a standalone area with create/join, member roster, independent wins/losses/win rate, and Clan leaderboard.
+- Tournament is separate from Clan management. Six registered clans are selected for a randomized single-elimination championship (two opening matches, two semifinal byes, and a final).
+- Clan tournament rosters support 3–5 players and are paired by descending ELO (highest vs highest, then down the roster). Tournament results are recorded by an authorized Admin; those results update Clan W/L records.
+- Diamonds include a transaction ledger. The ₱10 / 2-Diamond request remains pending until verified; no client-side credit is allowed. A real payment provider integration is not configured in this source package.
+- Obsidian Royale is a non-Christmas Exclusive Deal priced at 15 Diamonds. Owner/Admin accounts receive it free.
+- Checkmate now shows a king circle, lightning strike, and CHECKMATE announcement.
+- The scheduled update banner is enabled by `scripts/schedule-update.mjs` and counts down from 15 minutes.
+
+### Deployment note
+The Termux `ship.sh` release script schedules the website update banner for 15 minutes when it pushes the release. To schedule it separately, run `npm run schedule-update -- "Clan and Tournament update | Diamonds and cosmetics | Checkmate effects"`; this writes a 15-minute release schedule to `public/update.json`.

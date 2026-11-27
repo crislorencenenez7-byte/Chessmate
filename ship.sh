@@ -13,33 +13,45 @@ git remote get-url origin >/dev/null
 python3 - <<'PY'
 import json
 import re
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sw = Path("public/sw.js")
 config_file = Path("public/update.json")
+package = json.loads(Path("package.json").read_text())
+version = package["version"]
 
 source = sw.read_text()
 match = re.search(r"const CACHE = 'chessmate-shell-v(\d+)';", source)
-
 if not match:
     raise SystemExit("ERROR: Hindi makita ang Service Worker cache version.")
-
 old = int(match.group(1))
 new = old + 1
 source = source[:match.start(1)] + str(new) + source[match.end(1):]
 sw.write_text(source)
 
 config = json.loads(config_file.read_text())
-config["enabled"] = False
-config["scheduledAt"] = None
+release = datetime.now(timezone.utc) + timedelta(minutes=15)
+local_release = release.astimezone(timezone(timedelta(hours=8)))
+config.update({
+    "enabled": True,
+    "scheduledAt": release.isoformat().replace("+00:00", "Z"),
+    "date": local_release.strftime("%b %d, %Y %I:%M %p") + " (Philippines time)",
+    "title": f"ChessMate v{version} Scheduled Update",
+    "version": version,
+    "countdownMinutes": 15
+})
 config_file.write_text(json.dumps(config, indent=2) + "\n")
 
 print(f"Service Worker: v{old} -> v{new}")
-print("Scheduled banner: disabled for this direct release")
-print("Future scheduling code: preserved")
+print("Scheduled banner: enabled")
+print("Countdown: 15 minutes from deployment push")
+print("Release time:", config["date"])
 PY
 
-git add ship.sh public/app.js public/index.html public/style.css public/sw.js public/update.json
+git add ship.sh README.md db.js server-postgres.js package.json package-lock.json \
+  public/app.js public/index.html public/style.css public/pwa.js public/sw.js \
+  public/update.json scripts/schedule-update.mjs
 
 if git diff --cached --name-only | grep -Ei '(^|/)(\.env($|\.)|.*\.db$|.*\.sqlite3?$|.*backup.*|.*\.bak$|.*\.pem$|.*\.key$|id_rsa)'; then
   echo "ERROR: May sensitive o backup file. Push cancelled."
@@ -52,7 +64,7 @@ echo "===== FILES TO PUSH ====="
 git diff --cached --name-only
 git diff --cached --stat
 
-git commit -m "Upgrade premium admin dashboard and direct release"
+git commit -m "Release ChessMate v2.3.0 - Clans and Championship Tournament"
 git push origin main
 
 echo "===== GITHUB PUSH COMPLETE ====="
