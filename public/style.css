@@ -2258,6 +2258,11 @@ body {
 }
 .tournament-panel > .muted { max-width: 440px; margin: 0 auto; line-height: 1.8; }
 .tournament-snowflake { margin-top: 30px; color: #d8f2e4; letter-spacing: 1.2em; }
+body.game-screen-active .christmas-snow {
+  opacity: 0 !important;
+  animation-play-state: paused !important;
+}
+
 .christmas-snow {
   position: fixed;
   z-index: 100;

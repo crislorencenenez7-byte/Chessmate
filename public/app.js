@@ -428,6 +428,7 @@ async function loadTacoEvent() {
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   $(id).classList.add("active");
+  document.body.classList.toggle("game-screen-active", id === "game");
   syncTacoRainVisibility();
   syncChristmasMusic(id);
   window.scrollTo(0, 0);
