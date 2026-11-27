@@ -2,12 +2,12 @@
   "enabled": false,
   "scheduledAt": null,
   "date": "",
-  "title": "ChessMate v2.1.0 Premium Upgrade",
+  "title": "ChessMate v2.1.1",
   "description": [
     "Premium Admin Dashboard and Announcement UI",
     "Garden-inspired home interaction sound",
     "Raining Tacos event animation and original sound effects",
     "Admin release status monitor"
   ],
-  "version": "2.1.0"
+  "version": "2.1.1"
 }
