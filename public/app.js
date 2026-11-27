@@ -1078,62 +1078,167 @@ function coordsOf(sq) {
 }
 function pieceSrc(p) { return `./pieces/${p.color}${p.type.toUpperCase()}.svg`; }
 
+
+// Persistent board DOM: reuse the same 64 square elements between renders.
+let boardSquareCache = null;
+let boardSquareOrientation = null;
+let boardSquareFx = null;
+
 function render() {
   if (!G) return;
+
   const boardEl = $("board");
-  boardEl.classList.remove("theme-christmas","theme-obsidian","theme-aurora","theme-rose","theme-forest","theme-sapphire");
+  if (!boardEl) return;
+
+  boardEl.classList.remove(
+    "theme-christmas", "theme-obsidian", "theme-aurora",
+    "theme-rose", "theme-forest", "theme-sapphire"
+  );
+
   const boardTheme = G.sharedBoardTheme || economyState.board || "classic";
-    const fx = resolveFx(boardTheme);
-    document.body.dataset.fx = fx || "";
-    boardEl.classList.toggle("theme-sapphire", boardTheme === "board_sapphire");
+  const fx = resolveFx(boardTheme);
+
+  document.body.dataset.fx = fx || "";
+  boardEl.classList.toggle("theme-sapphire", boardTheme === "board_sapphire");
+
   if (boardTheme === "classic") boardEl.classList.add("theme-christmas");
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
   if (boardTheme === "board_rose") boardEl.classList.add("theme-rose");
   if (boardTheme === "board_forest") boardEl.classList.add("theme-forest");
+
   const vc = viewChess();
   const pos = vc.board();
   const isCheckmate = vc.isCheckmate();
   const ply = G.view > 0 ? G.plies[G.view - 1] : null;
   const targets = new Map();
-  if (G.sel && canMoveNow()) for (const m of vc.moves({ square: G.sel, verbose: true })) targets.set(m.to, !!m.captured);
-  let kingSq = null;
-  if (vc.inCheck()) for (const row of pos) for (const p of row) if (p && p.type === "k" && p.color === vc.turn()) kingSq = p.square;
 
+  if (G.sel && canMoveNow()) {
+    for (const m of vc.moves({ square: G.sel, verbose: true })) {
+      targets.set(m.to, !!m.captured);
+    }
+  }
+
+  let kingSq = null;
+  if (vc.inCheck()) {
+    for (const row of pos) {
+      for (const p of row) {
+        if (p && p.type === "k" && p.color === vc.turn()) {
+          kingSq = p.square;
+        }
+      }
+    }
+  }
+
+  if (!boardSquareCache) boardSquareCache = new Map();
+
+  const orderChanged =
+    boardSquareOrientation !== G.orient ||
+    boardSquareCache.size !== 64;
+
+  const fxChanged = boardSquareFx !== fx;
   const frag = document.createDocumentFragment();
+
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const f = G.orient === "w" ? col : 7 - col;
       const r = G.orient === "w" ? 7 - row : row;
       const name = FILES[f] + (r + 1);
       const p = pos[7 - r][f];
-      const sq = document.createElement("div");
-      sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
+
+      let sq = boardSquareCache.get(name);
+
+      if (!sq) {
+        sq = document.createElement("div");
+        sq.dataset.sq = name;
+        sq._cmPiece = null;
+        sq._cmRing = null;
+
+        boardSquareCache.set(name, sq);
         if (fx) marbleSlice(sq, col, row);
-      sq.dataset.sq = name;
-      if (ply && (ply.from === name || ply.to === name)) sq.classList.add("last");
-      if (G.sel === name) sq.classList.add("sel");
-      if (kingSq === name) sq.classList.add("check");
-      const matedKing = isCheckmate && p?.type === "k" && p.color === vc.turn();
-        if (matedKing) {
-          sq.classList.add("checkmate-king");
-          if (fx === "sapphire") sq.append(kingRing(p.color, true));
-        }
-      if (targets.has(name)) sq.classList.add(targets.get(name) ? "cap" : "dot");
-      if (p) {
-        const img = document.createElement("img");
-        img.className = "piece";
-        img.draggable = false;
-        img.src = pieceSrc(p);
-        img.alt = (p.color === "w" ? "White " : "Black ") + PIECE_NAME[p.type];
-        sq.append(img);
+      } else if (fx && (fxChanged || orderChanged)) {
+        marbleSlice(sq, col, row);
       }
-      if (col === 0) { const c = document.createElement("span"); c.className = "crd r"; c.textContent = r + 1; sq.append(c); }
-      if (row === 7) { const c = document.createElement("span"); c.className = "crd f"; c.textContent = FILES[f]; sq.append(c); }
-      frag.append(sq);
+
+      sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
+
+      // Coordinates follow the current screen orientation.
+      for (const [type, visible, value] of [
+        ["r", col === 0, String(r + 1)],
+        ["f", row === 7, FILES[f]]
+      ]) {
+        let coordinate = sq.querySelector(".crd." + type);
+
+        if (visible) {
+          if (!coordinate) {
+            coordinate = document.createElement("span");
+            coordinate.className = "crd " + type;
+            sq.append(coordinate);
+          }
+          coordinate.textContent = value;
+        } else if (coordinate) {
+          coordinate.remove();
+        }
+      }
+      sq.classList.toggle("last", !!ply && (ply.from === name || ply.to === name));
+      sq.classList.toggle("sel", G.sel === name);
+      sq.classList.toggle("check", kingSq === name);
+
+      const matedKing =
+        isCheckmate && p?.type === "k" && p.color === vc.turn();
+
+      sq.classList.toggle("checkmate-king", !!matedKing);
+      sq.classList.toggle("cap", targets.get(name) === true);
+      sq.classList.toggle("dot", targets.has(name) && !targets.get(name));
+
+      const needsRing = !!matedKing && fx === "sapphire";
+
+      if (needsRing && !sq._cmRing) {
+        sq._cmRing = kingRing(p.color, true);
+        sq.insertBefore(sq._cmRing, sq.firstChild);
+      } else if (!needsRing && sq._cmRing) {
+        sq._cmRing.remove();
+        sq._cmRing = null;
+      }
+
+      if (p) {
+        const src = pieceSrc(p);
+        const alt = (p.color === "w" ? "White " : "Black ") + PIECE_NAME[p.type];
+
+        if (!sq._cmPiece) {
+          const img = document.createElement("img");
+          img.className = "piece";
+          img.draggable = false;
+          img.src = src;
+          img.alt = alt;
+          const coordinate = sq.querySelector(".crd");
+          if (coordinate) sq.insertBefore(img, coordinate);
+          else sq.append(img);
+          sq._cmPiece = img;
+        } else {
+          if (sq._cmPiece.getAttribute("src") !== src) {
+            sq._cmPiece.src = src;
+          }
+          if (sq._cmPiece.alt !== alt) sq._cmPiece.alt = alt;
+        }
+      } else if (sq._cmPiece) {
+        sq._cmPiece.remove();
+        sq._cmPiece = null;
+      }
+
+      if (orderChanged) frag.append(sq);
     }
   }
-  boardEl.replaceChildren(frag);
+
+  // Reorder only when first initialized or the board orientation changes.
+  // Keep the Admin Coach SVG overlay in place.
+  if (orderChanged) {
+    const arrow = boardEl.querySelector("#admin-coach-arrow");
+    boardEl.insertBefore(frag, arrow);
+    boardSquareOrientation = G.orient;
+  }
+
+  boardSquareFx = fx;
 
   if (G.anim) {
     const moves = Array.isArray(G.anim) ? G.anim : [G.anim];
@@ -1180,6 +1285,7 @@ function render() {
       }
     }
   }
+
   renderBadge();
   renderNotation();
   updateStatus();
