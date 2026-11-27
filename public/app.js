@@ -902,11 +902,11 @@ function applyMove(m, o = {}) {
     socket.emit("room-move", { code: G.roomCode, move: { from: made.from, to: made.to, promotion: made.promotion } });
   }
   render();
+  maybeAi();
   if (!o.skipAnalysis) analyzePly(G.plies.length - 1);
   if (!o.suppressPremove && ["ai", "friends", "ranked"].includes(G.mode) && G.live.turn() === G.myColor && G.premove) {
     queueMicrotask(playQueuedPremove);
   }
-  maybeAi();
   return ply;
 }
 
@@ -1093,6 +1093,7 @@ function render() {
   if (boardTheme === "board_forest") boardEl.classList.add("theme-forest");
   const vc = viewChess();
   const pos = vc.board();
+  const isCheckmate = vc.isCheckmate();
   const ply = G.view > 0 ? G.plies[G.view - 1] : null;
   const targets = new Map();
   if (G.sel && canMoveNow()) for (const m of vc.moves({ square: G.sel, verbose: true })) targets.set(m.to, !!m.captured);
@@ -1113,7 +1114,7 @@ function render() {
       if (ply && (ply.from === name || ply.to === name)) sq.classList.add("last");
       if (G.sel === name) sq.classList.add("sel");
       if (kingSq === name) sq.classList.add("check");
-      const matedKing = vc.isCheckmate() && p?.type === "k" && p.color === vc.turn();
+      const matedKing = isCheckmate && p?.type === "k" && p.color === vc.turn();
         if (matedKing) {
           sq.classList.add("checkmate-king");
           if (fx === "sapphire") sq.append(kingRing(p.color, true));
@@ -1230,9 +1231,9 @@ async function renderAdminCoach() {
 
   try {
     const analysis = await engine.analyze(fen, {
-      depth: 14,
-      multipv: 5,
-      movetime: 2600
+      depth: 12,
+      multipv: 3,
+      movetime: 1400
     });
 
     if (

@@ -13,7 +13,7 @@ export const LEVELS = [
   { id: 4, name: "Master",       opts: { limit: false, skill: 20 }, go: "depth 14 movetime 900" }
 ];
 
-const ANALYSIS = { depth: 13, multipv: 2, movetime: 2200 };
+const ANALYSIS = { depth: 10, multipv: 2, movetime: 900 };
 
 export class Engine {
   constructor() {
@@ -100,7 +100,12 @@ export class Engine {
   }
 
   _enqueue(job) {
-    this.queue.push(job);
+    const priority = Number(job.priority) || 0;
+    const index = this.queue.findIndex(
+      queued => (Number(queued.priority) || 0) < priority
+    );
+    if (index < 0) this.queue.push(job);
+    else this.queue.splice(index, 0, job);
     this._pump();
   }
 
@@ -183,6 +188,7 @@ export class Engine {
     if (this.state === "failed") return Promise.reject(new Error("Engine unavailable"));
     return new Promise((resolve, reject) => {
       this._enqueue({
+        priority: 100,
         limitMs: mt,
         fail: reject,
         start: () => {
