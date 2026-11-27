@@ -1,6 +1,6 @@
 {
   "name": "chessmate",
-  "version": "2.3.18",
+  "version": "2.3.19",
   "private": true,
   "description": "ChessMate online chess platform",
   "main": "server-postgres.js",
