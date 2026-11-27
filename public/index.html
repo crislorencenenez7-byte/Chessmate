@@ -50,6 +50,16 @@
         <span class="sound-icon">♫</span>
         <span class="sound-label">Sound On</span>
       </button>
+      <div class="christmas-music-control">
+        <button id="christmas-music-toggle" class="home-sound-toggle christmas-music-toggle" type="button" aria-pressed="false">
+          <span class="sound-icon">🎄</span>
+          <span id="christmas-music-label">Christmas Music Off</span>
+        </button>
+        <label class="christmas-volume-control" for="christmas-music-volume">
+          <span>Music Volume <strong id="christmas-volume-label">82%</strong></span>
+          <input id="christmas-music-volume" type="range" min="0" max="100" value="82">
+        </label>
+      </div>
     </div>
     <div class="hero-board" id="hero-board" aria-hidden="true"></div>
   </div>

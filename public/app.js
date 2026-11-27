@@ -138,6 +138,186 @@ document.addEventListener("pointerdown", event => {
   playHomeUiSound();
 }, { capture: true, passive: true });
 
+
+/* ------------------------------------------------------------------ Christmas background music */
+let christmasMusicEnabled = store("cm_christmas_music") === "on";
+const savedChristmasVolumeRaw = store("cm_christmas_music_volume");
+const savedChristmasVolume = savedChristmasVolumeRaw === null || savedChristmasVolumeRaw === ""
+  ? 82
+  : Number(savedChristmasVolumeRaw);
+let christmasMusicVolume = Number.isFinite(savedChristmasVolume)
+  ? Math.max(0, Math.min(100, savedChristmasVolume))
+  : 82;
+
+let christmasAudioContext = null;
+let christmasMusicGain = null;
+let christmasMusicTimer = null;
+let christmasMusicStep = 0;
+
+const christmasMelody = [
+  523.25, 659.25, 783.99, 698.46, 659.25, 587.33, 523.25, 587.33,
+  659.25, 783.99, 880.00, 783.99, 698.46, 659.25, 587.33, 0,
+  698.46, 783.99, 880.00, 987.77, 880.00, 783.99, 698.46, 659.25,
+  587.33, 659.25, 698.46, 783.99, 659.25, 587.33, 523.25, 0
+];
+
+function updateChristmasMusicButton() {
+  const button = $("christmas-music-toggle");
+  const label = $("christmas-music-label");
+  const volume = $("christmas-music-volume");
+  const volumeLabel = $("christmas-volume-label");
+
+  if (button) button.setAttribute("aria-pressed", String(christmasMusicEnabled));
+  if (label) label.textContent = christmasMusicEnabled
+    ? "Christmas Music On"
+    : "Christmas Music Off";
+  if (volume) volume.value = String(christmasMusicVolume);
+  if (volumeLabel) volumeLabel.textContent = `${christmasMusicVolume}%`;
+}
+
+function applyChristmasMusicVolume() {
+  if (!christmasMusicGain || !christmasAudioContext) return;
+  const target = christmasMusicEnabled ? 0.55 * (christmasMusicVolume / 100) : 0;
+  christmasMusicGain.gain.setTargetAtTime(
+    target,
+    christmasAudioContext.currentTime,
+    0.08
+  );
+}
+
+function playChristmasTone(frequency, startAt, duration, level, type = "sine") {
+  const ctx = christmasAudioContext;
+  if (!ctx || !christmasMusicGain || !frequency) return;
+
+  const oscillator = ctx.createOscillator();
+  const envelope = ctx.createGain();
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, startAt);
+
+  envelope.gain.setValueAtTime(0.0001, startAt);
+  envelope.gain.exponentialRampToValueAtTime(level, startAt + 0.025);
+  envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+  oscillator.connect(envelope);
+  envelope.connect(christmasMusicGain);
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + 0.03);
+}
+
+function playChristmasMusicBeat() {
+  const ctx = christmasAudioContext;
+  if (!ctx || ctx.state !== "running") return;
+
+  const step = christmasMusicStep % christmasMelody.length;
+  const frequency = christmasMelody[step];
+  const at = ctx.currentTime + 0.035;
+
+  if (frequency) {
+    playChristmasTone(frequency, at, 0.29, 0.34, "triangle");
+    playChristmasTone(frequency * 2, at, 0.19, 0.075, "sine");
+  }
+
+  const bassNotes = [130.81, 146.83, 174.61, 196.00];
+  if (step % 8 === 0) {
+    const bass = bassNotes[Math.floor(step / 8) % bassNotes.length];
+    playChristmasTone(bass, at, 0.48, 0.22, "sine");
+  }
+
+  christmasMusicStep++;
+}
+
+function startChristmasMusic() {
+  if (!christmasMusicEnabled || document.visibilityState === "hidden") return;
+
+  const activeScreen = document.querySelector(".screen.active")?.id;
+  if (activeScreen === "game") return;
+
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+
+  try {
+    christmasAudioContext ||= new AudioContextClass();
+
+    if (!christmasMusicGain) {
+      christmasMusicGain = christmasAudioContext.createGain();
+      christmasMusicGain.gain.value = 0;
+      christmasMusicGain.connect(christmasAudioContext.destination);
+    }
+
+    const begin = () => {
+      if (!christmasMusicEnabled || document.visibilityState === "hidden") return;
+      if (document.querySelector(".screen.active")?.id === "game") return;
+
+      applyChristmasMusicVolume();
+
+      if (christmasMusicTimer) return;
+
+      playChristmasMusicBeat();
+      christmasMusicTimer = setInterval(playChristmasMusicBeat, 360);
+    };
+
+    if (christmasAudioContext.state === "suspended") {
+      christmasAudioContext.resume().then(begin).catch(() => {});
+    } else {
+      begin();
+    }
+  } catch {}
+}
+
+function stopChristmasMusic() {
+  if (christmasMusicTimer) {
+    clearInterval(christmasMusicTimer);
+    christmasMusicTimer = null;
+  }
+
+  if (christmasMusicGain && christmasAudioContext) {
+    christmasMusicGain.gain.setTargetAtTime(
+      0,
+      christmasAudioContext.currentTime,
+      0.08
+    );
+  }
+}
+
+function syncChristmasMusic(screenId) {
+  const activeScreen = screenId || document.querySelector(".screen.active")?.id;
+
+  if (
+    christmasMusicEnabled &&
+    activeScreen !== "game" &&
+    document.visibilityState !== "hidden"
+  ) {
+    startChristmasMusic();
+  } else {
+    stopChristmasMusic();
+  }
+}
+
+const christmasMusicToggle = $("christmas-music-toggle");
+if (christmasMusicToggle) {
+  updateChristmasMusicButton();
+
+  christmasMusicToggle.addEventListener("click", () => {
+    christmasMusicEnabled = !christmasMusicEnabled;
+    store("cm_christmas_music", christmasMusicEnabled ? "on" : "off");
+    updateChristmasMusicButton();
+    syncChristmasMusic();
+  });
+}
+
+const christmasVolumeSlider = $("christmas-music-volume");
+if (christmasVolumeSlider) {
+  christmasVolumeSlider.addEventListener("input", () => {
+    christmasMusicVolume = Math.max(0, Math.min(100, Number(christmasVolumeSlider.value)));
+    store("cm_christmas_music_volume", String(christmasMusicVolume));
+    updateChristmasMusicButton();
+    applyChristmasMusicVolume();
+  });
+}
+
+document.addEventListener("visibilitychange", () => syncChristmasMusic());
+
 /* ------------------------------------------------------------------ Raining Tacos event */
 function setTacoEventActive(active) {
   window.__cmTacoEventActive = active === true;
@@ -248,6 +428,7 @@ function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   $(id).classList.add("active");
   syncTacoRainVisibility();
+  syncChristmasMusic(id);
   window.scrollTo(0, 0);
 }
 function toast(t) {
