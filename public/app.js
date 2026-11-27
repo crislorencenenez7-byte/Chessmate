@@ -1164,8 +1164,10 @@ function render() {
             { transform: "translate3d(0, 0, 0)" }
           ],
           {
-            duration: 300,
-            easing: "cubic-bezier(.16,1,.3,1)",
+            duration: fx === "sapphire" ? 600 : 300,
+            easing: fx === "sapphire"
+              ? "cubic-bezier(.22,1,.36,1)"
+              : "cubic-bezier(.16,1,.3,1)",
             fill: "both"
           }
         );
@@ -1173,6 +1175,7 @@ function render() {
         animation.onfinish = () => {
           img.style.zIndex = "";
           img.style.willChange = "";
+          animation.cancel();
         };
       }
     }
