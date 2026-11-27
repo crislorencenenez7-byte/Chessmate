@@ -2666,3 +2666,77 @@ body[data-fx] #game .eval-bar { box-shadow: 0 0 0 2px #e9c66e99, 0 5px 16px #000
     font-size: 9px;
   }
 }
+
+
+/* ChessMate responsive desktop-fit and overflow fix v2.3.17 */
+html, body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+body {
+  min-width: 0;
+}
+
+.app, .screen, #home, #game, .game-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#home .mode-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  min-width: 0;
+}
+
+#home .mode-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.game-wrap, .board-area, .game-top, .game-tools {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  :root {
+    --pad: 7px;
+    --bs: min(
+      calc(100vw - 2 * var(--pad) - 54px),
+      calc(100dvh - 250px),
+      640px
+    );
+  }
+
+  .app {
+    padding-inline: var(--pad);
+  }
+
+  #home .mode-grid {
+    gap: 7px;
+  }
+
+  #home .mode-card {
+    padding: 9px 6px;
+  }
+
+  .game-wrap {
+    overflow-x: clip;
+  }
+}
+
+@media (max-width: 360px) {
+  #home .mode-grid {
+    gap: 5px;
+  }
+
+  #home .mode-card b {
+    font-size: 10px;
+  }
+
+  #home .mode-card small {
+    font-size: 9px;
+  }
+}

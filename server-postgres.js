@@ -680,9 +680,15 @@ function playerOf(room, socketId) {
 }
 
 function sharedBoardTheme(room) {
-  return room.players.some(p =>
+  if (room.players.some(p =>
     p.user?.isAdmin === true && p.user?.boardKey === "board_obsidian"
-  ) ? "board_obsidian" : null;
+  )) return "board_obsidian";
+
+  if (room.players.some(p =>
+    p.user?.boardKey === "board_sapphire"
+  )) return "board_sapphire";
+
+  return null;
 }
 
 function playersPayload(room) {
