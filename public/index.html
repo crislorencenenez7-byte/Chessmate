@@ -264,8 +264,19 @@
   <div class="tournament-panel clan-panel">
     <p class="tournament-overline">CHESSMATE COMMUNITY</p>
     <h2>Clans</h2>
-    <p class="muted">Create or join a Clan. Clan Wins, Losses and Win Rate are tracked separately from Tournament results.</p>
-    <h3>Clan Leaderboard</h3><div id="clan-leaderboard" class="list">Loading…</div>
+    <p class="muted">Create or join a Clan. Build a roster of 3–5 players for tournament registration.</p>
+    <div class="clan-management">
+      <h3>Create a Clan</h3>
+      <input id="clan-name" type="text" maxlength="24" placeholder="Enter Clan name">
+      <button id="clan-create" class="primary">Create Clan</button>
+      <h3>Join a Clan</h3>
+      <input id="clan-code" type="text" maxlength="32" placeholder="Enter invite code">
+      <button id="clan-join" class="secondary">Join Clan</button>
+    </div>
+    <h3>My Clan</h3>
+    <div id="clan-info" class="clan-info">Log in to create or join a Clan.</div>
+    <h3>Clan Leaderboard</h3>
+    <div id="clan-leaderboard" class="list">Loading…</div>
   </div>
 </section>
 

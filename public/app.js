@@ -1411,29 +1411,47 @@ function showResultSoon() {
   setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, 900);
 }
 function showResult() {
-  const o = G.over;
-  let title, detail = o.reason.charAt(0).toUpperCase() + o.reason.slice(1);
-  if (G.myColor) {
-    const mine = colorName(G.myColor);
-    title = o.result === "draw" ? "Draw" : o.result === mine ? "You won!" : "You lost";
-  } else {
-    title = o.result === "draw" ? "Draw" : (o.result === "white" ? "White wins" : "Black wins");
-  }
-  $("result-title").textContent = title;
-  $("result-detail").textContent = detail;
-  $("result-rating").textContent = o.ratingLine || "";
-  $("overlay").classList.remove("hidden");
-  if (o.reason === "checkmate") {
-    const board=$("board");
-    board.classList.remove("king-burst");
-    void board.offsetWidth;
-    board.classList.add("king-burst");
-    const announcement=document.createElement("div");
-    announcement.className="checkmate-announcement";
-    announcement.textContent="CHECKMATE";
-    board.append(announcement);
-    setTimeout(()=>announcement.remove(),2600);
-  }
+  const g=G;
+  if (!g || !g.over || g._resultSequenceStarted) return;
+  g._resultSequenceStarted=true;
+  const o=g.over;
+  const title=o.result==="draw" ? "Draw" : G.myColor
+    ? (o.result===colorName(G.myColor) ? "You won!" : "You lost")
+    : (o.result==="white" ? "White wins" : "Black wins");
+  const detail=o.reason.charAt(0).toUpperCase()+o.reason.slice(1);
+  const reveal=()=>{
+    if(G!==g) return;
+    $("result-title").textContent=title;
+    $("result-detail").textContent=detail;
+    $("result-rating").textContent=o.ratingLine||"";
+    $("overlay").classList.remove("hidden");
+  };
+  if(o.reason!=="checkmate"){ reveal(); return; }
+
+  const board=$("board");
+  const king=board?.querySelector(".checkmate-king");
+  if(!board || !king){ reveal(); return; }
+
+  king.classList.add("cm-circle-active");
+  setTimeout(()=>{
+    if(G!==g) return;
+    const bolt=document.createElement("span");
+    bolt.className="cm-lightning";
+    bolt.textContent="ϟ";
+    king.append(bolt);
+    setTimeout(()=>{
+      if(G!==g) return;
+      bolt.remove();
+      const announcement=document.createElement("div");
+      announcement.className="checkmate-announcement cm-final-announcement";
+      announcement.textContent="CHECKMATE";
+      board.append(announcement);
+      setTimeout(()=>{
+        announcement.remove();
+        reveal();
+      },900);
+    },650);
+  },750);
 }
 
 /* ------------------------------------------------------------------ board input */
@@ -1639,18 +1657,22 @@ async function loadEconomy() {
   if (!token) return;
   const [wallet,catalog,ledger] = await Promise.all([api("/api/economy/me"),api("/api/economy/catalog"),api("/api/economy/ledger")]);
   economyState = {...wallet};
-  $("diamond-history").innerHTML=ledger.transactions.map(t=>`<div class="row-item"><b>${escapeHtml(t.reason)}</b><strong class="${t.amount>0?"positive":"negative"}">${t.amount>0?"+":""}${t.amount} 💎</strong><small>${new Date(t.created_at).toLocaleString()}</small></div>`).join("") || "No Diamond transactions yet.";
-  $("home-diamonds").textContent = `${wallet.diamonds} Diamonds`;
-  $("shop-balance").textContent = wallet.diamonds;
-  $("home-avatar").textContent = AVATAR_GLYPHS[wallet.avatar] || "♞";
-  $("profile-avatar").textContent = AVATAR_GLYPHS[wallet.avatar] || "♞";
-  $("profile-name").textContent = user?.username || "Player";
-  $("profile-stats").textContent = `${user?.rating ?? 800} ELO · ${user?.wins ?? 0} wins · ${wallet.diamonds} Diamonds`;
+  const put = (id, value) => { const el = $(id); if (el) el.textContent = value; };
+  const history = $("diamond-history");
+  if (history) history.innerHTML=(Array.isArray(ledger.transactions) ? ledger.transactions : []).map(t=>`<div class="row-item"><b>${escapeHtml(t.reason)}</b><strong class="${t.amount>0?"positive":"negative"}">${t.amount>0?"+":""}${t.amount} 💎</strong><small>${new Date(t.created_at).toLocaleString()}</small></div>`).join("") || "No Diamond transactions yet.";
+  put("home-diamonds", `${wallet.diamonds} Diamonds`);
+  put("shop-balance", wallet.diamonds);
+  put("home-avatar", AVATAR_GLYPHS[wallet.avatar] || "♞");
+  put("profile-avatar", AVATAR_GLYPHS[wallet.avatar] || "♞");
+  put("profile-name", user?.username || "Player");
+  put("profile-stats", `${user?.rating ?? 800} ELO · ${user?.wins ?? 0} wins · ${wallet.diamonds} Diamonds`);
   renderCosmetics(catalog.cosmetics, wallet);
 }
 function renderCosmetics(items, wallet) {
+  items = Array.isArray(items) ? items : [];
+  wallet = {...wallet, owned: Array.isArray(wallet?.owned) ? wallet.owned : []};
   const renderCard = item => {
-    const adminFree = wallet.isAdmin === true && item.exclusive === true;
+    const adminFree = wallet.isAdmin === true && item.reward !== true && item.price >= 0;
     const owned = wallet.owned.includes(item.key) || item.price === 0;
     const equipped = wallet.avatar === item.key || wallet.board === item.key;
     const rewardLocked = item.reward === true && !owned;
@@ -1670,19 +1692,27 @@ async function openShop() {
   try { await loadEconomy(); } catch(e) { $("cosmetic-grid").textContent=e.message; }
 }
 async function loadClan() {
-  if (!token) { $("clan-info").textContent="Log in to create or join a clan."; return; }
+  const info=$("clan-info"), profile=$("profile-clan");
+  if (!token) { if(info) info.textContent="Log in to create or join a clan."; return; }
   const d=await api("/api/clans/me");
-  if (!d.clan) { $("clan-info").textContent="You are not in a clan yet. Create one or join with an invite code."; $("profile-clan").textContent="No clan yet."; return; }
+  if (!d.clan) {
+    if(info) info.textContent="You are not in a clan yet. Create one or join with an invite code.";
+    if(profile) profile.textContent="No clan yet.";
+    return;
+  }
   const c=d.clan;
-  const roster=c.members.map((m,i)=>`<div class="row-item"><span>${i+1}</span><b>${escapeHtml(m.username)}</b><strong>${m.rating} ELO</strong></div>`).join("");
-  $("clan-info").innerHTML=`<h3>${escapeHtml(c.name)}</h3><p>Invite code: <b>${escapeHtml(c.inviteCode)}</b> · ${c.members.length}/5 players</p><div class="clan-record"><b>${c.wins} Wins</b><b>${c.losses} Losses</b><b>${c.winRate}% Win Rate</b></div>${roster}`;
-  $("profile-clan").innerHTML=`<b>${escapeHtml(c.name)}</b><p>${c.wins}W · ${c.losses}L · ${c.winRate}% Win Rate</p><p>Invite code: ${escapeHtml(c.inviteCode)}</p>${roster}`;
+  const members=Array.isArray(c.members)?c.members:[];
+  const roster=members.map((m,i)=>`<div class="row-item"><span>${i+1}</span><b>${escapeHtml(m.username)}</b><strong>${m.rating} ELO</strong></div>`).join("");
+  if(info) info.innerHTML=`<h3>${escapeHtml(c.name)}</h3><p>Invite code: <b>${escapeHtml(c.inviteCode)}</b> · ${members.length}/5 players</p><div class="clan-record"><b>${c.wins} Wins</b><b>${c.losses} Losses</b><b>${c.winRate}% Win Rate</b></div>${roster}`;
+  if(profile) profile.innerHTML=`<b>${escapeHtml(c.name)}</b><p>${c.wins}W · ${c.losses}L · ${c.winRate}% Win Rate</p><p>Invite code: ${escapeHtml(c.inviteCode)}</p>${roster}`;
 }
 async function loadClanLeaderboard() {
+  const list=$("clan-leaderboard");
+  if(!list) return;
   try {
     const d=await api("/api/clans/leaderboard");
-    $("clan-leaderboard").innerHTML=d.clans.map((c,i)=>`<div class="row-item"><b>#${i+1} ${escapeHtml(c.name)}</b><span>${c.wins}W · ${c.losses}L</span><strong>${c.win_rate}% WR</strong><small>${c.members} members</small></div>`).join("") || "No registered Clans yet.";
-  } catch(e) { $("clan-leaderboard").textContent=e.message; }
+    list.innerHTML=(Array.isArray(d.clans)?d.clans:[]).map((c,i)=>`<div class="row-item"><b>#${i+1} ${escapeHtml(c.name)}</b><span>${c.wins}W · ${c.losses}L</span><strong>${c.win_rate}% WR</strong><small>${c.members} members</small></div>`).join("") || "No registered Clans yet.";
+  } catch(e) { list.textContent=e.message; }
 }
 async function loadTournamentEntries() {
   try {
@@ -1726,6 +1756,12 @@ function setupUI() {
   if (clanCreateButton) clanCreateButton.onclick = async () => { try { await api("/api/clans",{method:"POST",body:JSON.stringify({name:$("clan-name").value})}); await loadClan(); await loadClanLeaderboard(); toast("Clan created!"); } catch(e) { toast(e.message); } };
   const clanJoinButton = $("clan-join");
   if (clanJoinButton) clanJoinButton.onclick = async () => { try { await api("/api/clans/join",{method:"POST",body:JSON.stringify({code:$("clan-code").value})}); await loadClan(); await loadClanLeaderboard(); toast("Joined clan!"); } catch(e) { toast(e.message); } };
+  const openClanButton = $("open-clan");
+  if (openClanButton) openClanButton.onclick = async () => {
+    show("clan");
+    try { await loadClan(); await loadClanLeaderboard(); }
+    catch(e) { $("clan-info").textContent = e.message; }
+  };
   $("tournament-register").onclick = async () => { try { const d=await api("/api/tournament/register",{method:"POST",body:"{}"}); $("tournament-status").textContent=`${d.clan.name} registered (${d.registeredClans}/6). ${d.format}`; await loadTournamentEntries(); } catch(e) { $("tournament-status").textContent=e.message; } };
   $("tournament-bracket").onclick = async e => { const b=e.target.closest("[data-tourney-winner]"); if(!b)return; try { await api("/api/admin/tournament/result",{method:"POST",body:JSON.stringify({matchId:Number(b.dataset.tourneyWinner),winnerClanId:Number(b.dataset.winnerClan)})}); await loadTournamentEntries(); await loadClanLeaderboard(); toast("Tournament result saved."); } catch(err) { toast(err.message); } };
 

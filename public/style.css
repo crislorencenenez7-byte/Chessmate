@@ -2378,3 +2378,53 @@ body {
 #board.theme-christmas .sq.last::before{background:rgba(207,54,66,.48)}
 #board.theme-christmas .sq.sel::before{background:rgba(231,190,83,.62)}
 #board.theme-christmas .sq.check::before{background:radial-gradient(circle,#df303dcc 0,#bb283a99 40%,transparent 74%)}
+
+/* Clan management UI */
+.clan-management{
+  display:grid;
+  gap:10px;
+  margin:18px 0;
+  padding:15px;
+  border:1px solid var(--line,rgba(255,255,255,.12));
+  border-radius:14px;
+  background:rgba(255,255,255,.035);
+}
+.clan-management h3{margin:8px 0 0}
+.clan-management input{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.clan-management button{width:100%}
+#clan-info{margin:12px 0}
+
+/* Clan management and premium Exclusive Deals */
+.clan-management{display:grid;gap:11px;margin:18px 0;padding:16px;border:1px solid var(--line,rgba(255,255,255,.13));border-radius:16px;background:rgba(255,255,255,.04)}
+.clan-management h3{margin:8px 0}
+.clan-management input{width:100%;min-width:0;box-sizing:border-box}
+.clan-management button{width:100%;min-height:42px}
+#exclusive-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px}
+#exclusive-grid .cosmetic-card{border:1px solid rgba(231,190,91,.65);border-radius:18px;background:radial-gradient(ellipse at top,rgba(255,207,99,.2),transparent 60%),linear-gradient(145deg,rgba(77,56,25,.35),rgba(16,20,30,.96));box-shadow:inset 0 1px rgba(255,255,255,.08),0 12px 28px #0003}
+#exclusive-grid .cosmetic-art{height:110px;font-size:58px;color:#ffe2a0;text-shadow:0 0 22px #ffbf45}
+#exclusive-grid .cosmetic-card h3{color:#ffe6ad}
+#exclusive-grid .cosmetic-type{color:#f3d18b}
+#clan-info{overflow-wrap:anywhere}
+@media(max-width:560px){#exclusive-grid{grid-template-columns:1fr}}
+
+
+/* Checkmate finale: circle the mated King, lightning, then announcement */
+#board .checkmate-king{position:relative;z-index:2}
+#board .checkmate-king.cm-circle-active::after{
+  content:"";position:absolute;inset:7%;border:3px solid #ffd76a;border-radius:50%;
+  box-shadow:0 0 10px #ffd76a,0 0 24px rgba(255,190,55,.9);
+  animation:cm-ring-pulse .7s ease-in-out infinite alternate;pointer-events:none
+}
+#board .cm-lightning{
+  position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-55%);
+  color:#fff2a0;font-size:clamp(48px,10vw,100px);font-weight:900;
+  text-shadow:0 0 8px #fff,0 0 22px #ffd43b,0 0 42px #ff8c00;
+  animation:cm-bolt .65s ease-out both;pointer-events:none
+}
+#board .cm-final-announcement{z-index:20}
+@keyframes cm-ring-pulse{from{transform:scale(.88);opacity:.65}to{transform:scale(1.08);opacity:1}}
+@keyframes cm-bolt{0%{opacity:0;transform:translate(-50%,-75%) scale(.5)}25%{opacity:1;transform:translate(-50%,-55%) scale(1.25)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}

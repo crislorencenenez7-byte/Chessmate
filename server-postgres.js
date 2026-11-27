@@ -431,7 +431,7 @@ app.post("/api/economy/purchase", auth, async (req, res) => {
     const already = await client.query("SELECT 1 FROM cosmetic_purchases WHERE user_id=$1 AND cosmetic_key=$2", [req.user.id,key]);
     if (already.rowCount) throw new Error("You already own this cosmetic.");
     const adminResult = await client.query("SELECT is_admin FROM users WHERE id=$1", [req.user.id]);
-    const adminFree = item.exclusive === true && adminResult.rows[0]?.is_admin === true;
+    const adminFree = item.reward !== true && item.price >= 0 && adminResult.rows[0]?.is_admin === true;
     if (!adminFree && ur.rows[0].diamonds < item.price) throw new Error("Not enough Diamonds.");
     if (!adminFree && item.price > 0) {
       await client.query("UPDATE users SET diamonds=diamonds-$1 WHERE id=$2", [item.price,req.user.id]);
