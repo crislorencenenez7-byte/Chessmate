@@ -118,58 +118,103 @@ function drawBolt(ctx, b, power) {
   ctx.globalAlpha = 1; ctx.shadowBlur = 0;
 }
 
-/** Realistic Lightning Strike: a forked bolt hits the checkmated king. */
-export function lightningStrike(squareEl) {
-  if (!squareEl) return;
-  const r = squareEl.getBoundingClientRect();
-  const tx = r.left + r.width / 2, ty = r.top + r.height / 2;
-  squareEl.classList.add("struck");
-  setTimeout(() => squareEl.classList.remove("struck"), 4200);
-  if (reduceMotion()) return;
-
+/** Original Canvas lightning renderer — retained as fallback. */
+function lightningStrikeCanvas(cvData) {
+  const { tx, ty, r, main, frames } = cvData;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const cv = document.createElement("canvas");
   cv.className = "lightning-canvas";
-  cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr);
+  cv.width = Math.round(innerWidth * dpr);
+  cv.height = Math.round(innerHeight * dpr);
   document.body.append(cv);
+
   const ctx = cv.getContext("2d");
+  if (!ctx) {
+    cv.remove();
+    return;
+  }
   ctx.scale(dpr, dpr);
 
-  const flash = document.createElement("div");
-  flash.className = "lightning-flash";
-  document.body.append(flash);
-
-  const main = buildBolt(tx, ty, innerWidth);
-  // Real strikes flicker: initial stroke, a dim gap, then 1–2 return strokes.
-  const frames = [
-    { t: 0, p: 1 }, { t: 70, p: 0.12 }, { t: 130, p: 1 }, { t: 210, p: 0.2 },
-    { t: 270, p: 0.85 }, { t: 360, p: 0.35 }, { t: 470, p: 0.15 }
-  ];
   const start = performance.now();
-  thunder();
-  document.getElementById("board")?.classList.add("shake");
-  setTimeout(() => document.getElementById("board")?.classList.remove("shake"), 700);
-  flash.classList.add("go");
-
   let i = -1;
+
   const tick = now => {
-    const el = now - start;
+    const elapsed = now - start;
     let idx = -1;
-    frames.forEach((f, n) => { if (el >= f.t) idx = n; });
+    frames.forEach((f, n) => {
+      if (elapsed >= f.t) idx = n;
+    });
+
     if (idx !== i && idx >= 0) {
       i = idx;
       ctx.clearRect(0, 0, innerWidth, innerHeight);
       drawBolt(ctx, main, frames[idx].p);
-      // impact glow
-      const g = ctx.createRadialGradient(tx, ty, 0, tx, ty, r.width * 1.6);
-      g.addColorStop(0, `rgba(190,225,255,${0.75 * frames[idx].p})`);
-      g.addColorStop(1, "rgba(60,120,255,0)");
-      ctx.fillStyle = g; ctx.fillRect(tx - r.width * 2, ty - r.width * 2, r.width * 4, r.width * 4);
+
+      const glow = ctx.createRadialGradient(tx, ty, 0, tx, ty, r.width * 1.6);
+      glow.addColorStop(0, `rgba(190,225,255,${0.75 * frames[idx].p})`);
+      glow.addColorStop(1, "rgba(60,120,255,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(tx - r.width * 2, ty - r.width * 2, r.width * 4, r.width * 4);
     }
-    if (el < 900) requestAnimationFrame(tick);
-    else { cv.classList.add("out"); setTimeout(() => { cv.remove(); flash.remove(); }, 700); }
+
+    if (elapsed < 900) {
+      requestAnimationFrame(tick);
+    } else {
+      cv.classList.add("out");
+      setTimeout(() => cv.remove(), 700);
+    }
   };
+
   requestAnimationFrame(tick);
+}
+
+/** Sapphire lightning: PixiJS renderer with the original Canvas fallback. */
+export function lightningStrike(squareEl) {
+  if (!squareEl) return;
+
+  const r = squareEl.getBoundingClientRect();
+  const tx = r.left + r.width / 2;
+  const ty = r.top + r.height / 2;
+
+  squareEl.classList.add("struck");
+  setTimeout(() => squareEl.classList.remove("struck"), 4200);
+  if (reduceMotion()) return;
+
+  const main = buildBolt(tx, ty, innerWidth);
+  const frames = [
+    { t: 0, p: 1 }, { t: 70, p: 0.12 }, { t: 130, p: 1 },
+    { t: 210, p: 0.2 }, { t: 270, p: 0.85 },
+    { t: 360, p: 0.35 }, { t: 470, p: 0.15 }
+  ];
+
+  // Preserve the existing audio, flash and board-shake effects.
+  thunder();
+  document.getElementById("board")?.classList.add("shake");
+  setTimeout(() => document.getElementById("board")?.classList.remove("shake"), 700);
+
+  const flash = document.createElement("div");
+  flash.className = "lightning-flash";
+  document.body.append(flash);
+  flash.classList.add("go");
+
+  const data = { tx, ty, r, main, frames };
+
+  import("./pixi-fx.js")
+    .then(({ renderLightningPixi }) => renderLightningPixi({
+      bolt: main,
+      tx,
+      ty,
+      radius: r.width,
+      frames
+    }))
+    .then(success => {
+      if (!success) lightningStrikeCanvas(data);
+      setTimeout(() => flash.remove(), 1000);
+    })
+    .catch(() => {
+      lightningStrikeCanvas(data);
+      setTimeout(() => flash.remove(), 1000);
+    });
 }
 
 /** Checkmate burst. Sapphire: shockwave rings; Christmas: snowflake/gold sparkle. */
