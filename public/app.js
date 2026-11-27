@@ -1722,8 +1722,10 @@ function setupUI() {
   };
   $("cosmetic-grid").onclick = handleCosmeticClick;
   $("exclusive-grid").onclick = handleCosmeticClick;
-  $("clan-create").onclick = async () => { try { await api("/api/clans",{method:"POST",body:JSON.stringify({name:$("clan-name").value})}); await loadClan(); await loadClanLeaderboard(); toast("Clan created!"); } catch(e) { toast(e.message); } };
-  $("clan-join").onclick = async () => { try { await api("/api/clans/join",{method:"POST",body:JSON.stringify({code:$("clan-code").value})}); await loadClan(); await loadClanLeaderboard(); toast("Joined clan!"); } catch(e) { toast(e.message); } };
+  const clanCreateButton = $("clan-create");
+  if (clanCreateButton) clanCreateButton.onclick = async () => { try { await api("/api/clans",{method:"POST",body:JSON.stringify({name:$("clan-name").value})}); await loadClan(); await loadClanLeaderboard(); toast("Clan created!"); } catch(e) { toast(e.message); } };
+  const clanJoinButton = $("clan-join");
+  if (clanJoinButton) clanJoinButton.onclick = async () => { try { await api("/api/clans/join",{method:"POST",body:JSON.stringify({code:$("clan-code").value})}); await loadClan(); await loadClanLeaderboard(); toast("Joined clan!"); } catch(e) { toast(e.message); } };
   $("tournament-register").onclick = async () => { try { const d=await api("/api/tournament/register",{method:"POST",body:"{}"}); $("tournament-status").textContent=`${d.clan.name} registered (${d.registeredClans}/6). ${d.format}`; await loadTournamentEntries(); } catch(e) { $("tournament-status").textContent=e.message; } };
   $("tournament-bracket").onclick = async e => { const b=e.target.closest("[data-tourney-winner]"); if(!b)return; try { await api("/api/admin/tournament/result",{method:"POST",body:JSON.stringify({matchId:Number(b.dataset.tourneyWinner),winnerClanId:Number(b.dataset.winnerClan)})}); await loadTournamentEntries(); await loadClanLeaderboard(); toast("Tournament result saved."); } catch(err) { toast(err.message); } };
 

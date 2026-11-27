@@ -73,7 +73,7 @@
       ? config.description.join(" • ")
       : String(config.description || "ChessMate improvements and new features");
     updateBanner.hidden = false;
-    updateBanner.style.display = "block";
+    updateBanner.style.display = "";
   }
 
   function activateWaitingWorker() {
@@ -108,7 +108,10 @@
       const config = await response.json();
 
       if (!config.enabled || !config.scheduledAt) {
-        if (updateBanner) updateBanner.hidden = true;
+        if (updateBanner) {
+          updateBanner.hidden = true;
+          updateBanner.style.display = "none";
+        }
         return;
       }
 
@@ -131,7 +134,9 @@
           return;
         }
 
-        updateCountdown.textContent = '00:00:00';
+        updateCountdown.textContent = '00:00';
+        updateBanner.hidden = true;
+        updateBanner.style.display = 'none';
 
         if (!releaseStarted) {
           releaseStarted = true;
