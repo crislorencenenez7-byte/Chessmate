@@ -1081,7 +1081,7 @@ function render() {
   if (!G) return;
   const boardEl = $("board");
   boardEl.classList.remove("theme-christmas","theme-obsidian","theme-aurora","theme-rose","theme-forest");
-  const boardTheme = economyState.board || "classic";
+  const boardTheme = G.sharedBoardTheme || economyState.board || "classic";
   if (boardTheme === "classic") boardEl.classList.add("theme-christmas");
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
@@ -1610,13 +1610,16 @@ function startAi() {
   if (aiSetup.voice) coachSpeak(game.coachMessage);
 }
 
-function startOnline(kind, code, players, myName) {
+function startOnline(kind, code, players, myName, boardTheme = null) {
   const me = players.find(p => p.username === myName);
   const color = me ? me.color[0] : "w";
   const names = {};
   for (const p of players) names[p.color[0]] = { name: p.username, sub: p.rating ? String(p.rating) : "" };
   names.w ??= { name: "White" }; names.b ??= { name: "Black" };
-  return newGame(kind, { orient: color, myColor: color, roomCode: code, names });
+  const game = newGame(kind, { orient: color, myColor: color, roomCode: code, names });
+  game.sharedBoardTheme = boardTheme || null;
+  render();
+  return game;
 }
 
 function replayMoves(moves) {
@@ -2094,20 +2097,22 @@ socket.on("room-ready", d => {
   pendingRoom = null;
   $("room-code-box").classList.add("hidden");
   toast("Friend connected!");
-  startOnline("friends", d.code, d.players, user?.username);
+  startOnline("friends", d.code, d.players, user?.username, d.boardTheme);
 });
 socket.on("ranked-matched", d => {
   $("find-match").classList.remove("hidden"); $("cancel-match").classList.add("hidden");
   $("rank-status").textContent = "";
-  startOnline("ranked", d.code, d.players, user?.username);
+  startOnline("ranked", d.code, d.players, user?.username, d.boardTheme);
   toast("Ranked opponent found!");
 });
 socket.on("room-resume", d => {
   if (!G || G.roomCode !== d.code) {
-    startOnline(d.ranked ? "ranked" : "friends", d.code, d.players, user?.username);
+    startOnline(d.ranked ? "ranked" : "friends", d.code, d.players, user?.username, d.boardTheme);
     $("room-code-box").classList.add("hidden");
   }
+  G.sharedBoardTheme = d.boardTheme || null;
   syncFromServer(d);
+  render();
   toast("Reconnected to your game.");
 });
 socket.on("move-rejected", d => { syncFromServer(d); });

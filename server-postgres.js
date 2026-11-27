@@ -662,6 +662,12 @@ function playerOf(room, socketId) {
   return room.players.find(p => p.id === socketId);
 }
 
+function sharedBoardTheme(room) {
+  return room.players.some(p =>
+    p.user?.isAdmin === true && p.user?.boardKey === "board_obsidian"
+  ) ? "board_obsidian" : null;
+}
+
 function playersPayload(room) {
   return room.players.map(p => ({
     username: p.user.username,
@@ -676,7 +682,8 @@ function syncPayload(room) {
     fen: room.chess.fen(),
     moves: room.moves,
     ranked: !!room.ranked,
-    players: playersPayload(room)
+    players: playersPayload(room),
+    boardTheme: sharedBoardTheme(room)
   };
 }
 
@@ -868,7 +875,11 @@ io.on("connection", socket => {
       }
 
       const safeUser = publicUser(u);
-      socketUsers.set(socket.id, safeUser);
+      socketUsers.set(socket.id, {
+        ...safeUser,
+        isAdmin: u.is_admin === true,
+        boardKey: u.board_key || "classic"
+      });
       reply({ ok: true, user: safeUser });
 
       // Resume a game that was interrupted by a dropped connection.
@@ -878,6 +889,7 @@ io.on("connection", socket => {
         if (!p) continue;
         clearTimeout(p.dropTimer);
         p.id = socket.id;
+        p.user = socketUsers.get(socket.id);
         p.offline = false;
         socket.join(room.code);
         socket.emit("room-resume", { ...syncPayload(room), color: p.color });
@@ -921,7 +933,11 @@ io.on("connection", socket => {
     socket.join(code);
     room.started = true;
 
-    io.to(code).emit("room-ready", { code, players: playersPayload(room) });
+    io.to(code).emit("room-ready", {
+      code,
+      players: playersPayload(room),
+      boardTheme: sharedBoardTheme(room)
+    });
   });
 
   socket.on("room-move", data => {
@@ -1004,7 +1020,11 @@ io.on("connection", socket => {
     io.sockets.sockets.get(opponent.id)?.join(code);
     socket.join(code);
 
-    io.to(code).emit("ranked-matched", { code, players: playersPayload(room) });
+    io.to(code).emit("ranked-matched", {
+      code,
+      players: playersPayload(room),
+      boardTheme: sharedBoardTheme(room)
+    });
   });
 
   socket.on("cancel-queue", () => {
