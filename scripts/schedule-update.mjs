@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const file = path.join(root, "public", "update.json");
+const version = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8")).version;
 const description = process.argv.slice(2).join(" ").trim() ||
   "ChessMate improvements and new features";
 
@@ -19,9 +20,9 @@ const config = {
   enabled: true,
   scheduledAt: release.toISOString(),
   date: `${date} (Philippines time)`,
-  title: "ChessMate v2.3.0 Scheduled Update",
+  title: `ChessMate v${version} Scheduled Update`,
   description: description.split("|").map(x => x.trim()).filter(Boolean),
-  version: "2.3.0",
+  version,
   countdownMinutes: 15
 };
 
