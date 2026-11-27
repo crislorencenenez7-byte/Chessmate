@@ -2,12 +2,12 @@
   "enabled": false,
   "scheduledAt": null,
   "date": null,
-  "title": "ChessMate v2.3.5 Release",
+  "title": "ChessMate v2.3.6 Release",
   "description": [
-    "PixiJS integration for Royal Sapphire lightning effects",
-    "Updated visual effects rendering",
-    "ChessMate performance and stability improvements"
+    "Persistent chessboard rendering for reduced DOM updates",
+    "Improved board orientation and coordinate updates",
+    "Royal Sapphire and existing visual effects preserved"
   ],
-  "version": "2.3.5",
+  "version": "2.3.6",
   "countdownMinutes": 15
 }
