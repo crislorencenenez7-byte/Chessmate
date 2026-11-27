@@ -1439,6 +1439,7 @@ function setupUI() {
     const m = b.dataset.mode;
     if (m === "friends") { if (!ONLINE_ENABLED) return toast("Online play needs a hosted ChessMate backend. Local games still work."); $("friends-status").textContent = ""; show("friends"); }
     else if (m === "ranked") { if (!ONLINE_ENABLED) return toast("Ranked play needs a hosted ChessMate backend."); show("ranked"); }
+    else if (m === "tournament") show("tournament");
     else if (m === "ai") show("ai-setup");
     else if (m === "leaderboard") { if (!ONLINE_ENABLED) return toast("Leaderboard needs a hosted ChessMate backend."); loadLeaderboard(); show("leaderboard"); }
     else if (m === "history") {

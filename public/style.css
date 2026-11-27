@@ -2132,3 +2132,150 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* CHRISTMAS THEME */
+:root {
+  --christmas-green: #176b43;
+  --christmas-red: #b52d3b;
+  --christmas-gold: #e9c66e;
+}
+body {
+  background: radial-gradient(ellipse at 8% 0%, #176b4330, transparent 38%),
+              radial-gradient(ellipse at 95% 8%, #b52d3b20, transparent 34%), #0b1210;
+}
+#topbar {
+  border-bottom-color: #2b704d88;
+  background: linear-gradient(100deg, #102c22, #171b19 65%, #30171c);
+}
+.christmas-brand-mark {
+  position: relative;
+  display: inline-flex;
+  width: 34px;
+  height: 36px;
+  align-items: flex-end;
+  justify-content: center;
+}
+.christmas-brand-mark > img { width: 30px; height: 30px; }
+.elf-hat {
+  position: absolute;
+  z-index: 2;
+  top: -3px;
+  left: 10px;
+  width: 17px;
+  height: 14px;
+  transform: rotate(-17deg);
+  border-radius: 90% 12% 0 0;
+  background: linear-gradient(145deg, #f04a50, #a8172a);
+  clip-path: polygon(0 100%, 20% 35%, 100% 0, 75% 100%);
+}
+.elf-hat::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  bottom: -2px;
+  width: 19px;
+  height: 5px;
+  border-radius: 99px;
+  background: #fff8e9;
+}
+.elf-hat i {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+}
+#home .hero {
+  border-color: #39845c88;
+  background: radial-gradient(ellipse at 90% 50%, #176b4340, transparent 48%),
+              linear-gradient(120deg, #173a2c, #171d1a 55%, #251519);
+}
+#home .hero h1 em { color: #77d7a0; }
+#home .home-kicker { border-color: #e9c66e66; background: #176b4330; }
+#home .kicker-dot { background: #65d69a; box-shadow: 0 0 12px #65d69a; }
+#home .eyebrow, #home .section-overline { color: #e9c66e; }
+#home .mode-count { color: #f3dfae; border-color: #39845c88; background: #176b4325; }
+#home .mode-card {
+  border-color: #39845c55;
+  background: linear-gradient(145deg, #ffffff0d, transparent 55%),
+              linear-gradient(145deg, #172b22, #17191a);
+}
+#home .mode-card svg { stroke: #77d7a0; }
+#home .mode-card b { color: #fff8e9; }
+#home .mode-card:hover { border-color: #e9c66e; }
+.tournament-mode-card {
+  border-color: #b52d3b99 !important;
+  background: linear-gradient(145deg, #263b2d, #351c22) !important;
+}
+.tournament-mode-card svg { stroke: #e9c66e !important; }
+.tournament-tag, .coming-soon-label {
+  display: inline-block;
+  padding: 7px 12px;
+  border: 1px solid #e9c66e;
+  border-radius: 99px;
+  color: #fff0bd;
+  background: linear-gradient(100deg, #176b43, #8f2635);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+.tournament-screen { max-width: 850px; margin-inline: auto; }
+.tournament-panel {
+  margin-top: 28px;
+  padding: clamp(25px, 6vw, 55px) 22px;
+  border: 1px solid #39845c88;
+  border-radius: 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, #176b4350, transparent 65%),
+              linear-gradient(145deg, #172b22, #24171c);
+  box-shadow: 0 20px 60px #0008;
+}
+.tournament-emblem {
+  font-size: 48px;
+  color: #e9c66e;
+}
+.tournament-overline { color: #77d7a0; font-weight: 900; letter-spacing: .2em; }
+.tournament-panel h2 { color: #fff8e9; }
+.clan-waiting {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 25px auto 14px;
+  color: #f3dfae;
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+.clan-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e9c66e;
+  box-shadow: 0 0 12px #e9c66e;
+}
+.tournament-panel > .muted { max-width: 440px; margin: 0 auto; line-height: 1.8; }
+.tournament-snowflake { margin-top: 30px; color: #d8f2e4; letter-spacing: 1.2em; }
+.christmas-snow {
+  position: fixed;
+  z-index: 100;
+  inset: -100px 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: .4;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #fff 98%, transparent),
+    radial-gradient(2px 2px at 80px 120px, #fff 98%, transparent),
+    radial-gradient(1.5px 1.5px at 150px 70px, #fff 98%, transparent),
+    radial-gradient(2px 2px at 220px 180px, #fff 98%, transparent);
+  background-size: 320px 220px;
+  animation: chessmate-snowfall 18s linear infinite;
+}
+@keyframes chessmate-snowfall {
+  to { background-position: 80px 440px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .christmas-snow { animation: none; opacity: .18; }
+}
