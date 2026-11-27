@@ -756,7 +756,6 @@ function aiReactionForPlayerMove(ply) {
   const emotion = ["brilliant", "great", "best"].includes(key) ? "surprised" :
     ["mistake", "blunder"].includes(key) ? "smug" : "thinking";
 
-  coachSpeak(message);
   setOpponentReaction(message, emotion);
 }
 
@@ -790,7 +789,6 @@ function aiReactionAfterOpponentMove(ply) {
     emotion = "surprised";
   }
 
-  coachSpeak(message);
   setOpponentReaction(message, emotion);
 }
 
@@ -988,7 +986,6 @@ async function analyzePly(i) {
     if (r) {
       ply.cls = r;
       if (!ply.seen && g.mode === "ai" && ply.color === g.myColor) {
-        coachFeedback(ply);
         aiReactionForPlayerMove(ply);
       }
       ply.seen = true;
@@ -1316,7 +1313,14 @@ async function renderAdminCoach() {
   }
 
   const fen = fenAt(G.view);
-  if (!fen) {
+  if (!fen || !G.myColor) {
+    clearAdminCoach();
+    return;
+  }
+
+  // Never reveal a recommended move for the opponent.
+  const coachPosition = new Chess(fen);
+  if (coachPosition.turn() !== G.myColor) {
     clearAdminCoach();
     return;
   }
@@ -1741,9 +1745,6 @@ function startAi() {
   const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player" };
   const cpu = { name: bot.name, sub: `${bot.rating} challenge rating` };
   const game = newGame("ai", { orient: color, myColor: color, level: bot.level, bot: bot.id, names: color === "w" ? { w: me, b: cpu } : { w: cpu, b: me } });
-  game.coachMessage = `${bot.name}: ${bot.voice}`;
-  renderCoach();
-  if (aiSetup.voice) coachSpeak(game.coachMessage);
 }
 
 function startOnline(kind, code, players, myName, boardTheme = null) {
@@ -1772,21 +1773,6 @@ function syncFromServer(d) {
   refreshEval();
 }
 
-function openGameReview() {
-  if (!G) return;
-  const list = $("review-list");
-  list.innerHTML = G.plies.map((p, i) => {
-    const label = p.cls ? CLASSES[p.cls.key]?.label || p.cls.key : "Not analyzed";
-    const glyph = p.cls ? CLASSES[p.cls.key]?.glyph || "" : "";
-    return `<div class="review-row"><span>${Math.floor(i / 2) + 1}${p.color === "w" ? "." : "..."}</span><b>${escapeHtml(p.san)}</b><strong>${escapeHtml(label)} ${escapeHtml(glyph)}</strong></div>`;
-  }).join("") || "<p>No moves to review yet.</p>";
-  $("review-panel").hidden = false;
-  $("review-panel").scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function closeGameReview() {
-  $("review-panel").hidden = true;
-}
 
 
 // ------------------------------------------------------------------ Diamonds, profile cosmetics, clans and tournament UI
@@ -1941,11 +1927,8 @@ function setupUI() {
   };
   $("result-review").onclick = () => {
     $("overlay").classList.add("hidden");
-    openGameReview();
   };
   $("result-menu").onclick = goHome;
-  $("review-close").onclick = closeGameReview;
-  $("review-open").onclick = openGameReview;
   $("premove-cancel").onclick = () => {
     if (G) { G.premove = null; G.coachMessage = "Premove cancelled."; render(); toast("Premove cancelled."); }
   };
@@ -1965,12 +1948,6 @@ function setupUI() {
     store("cm_bot", aiSetup.bot);
     store("cm_ailevel", String(aiSetup.level));
     [...$("bot-roster").children].forEach(x => x.classList.toggle("on", x === b));
-  };
-  $("coach-voice").checked = aiSetup.voice;
-  $("coach-voice").onchange = () => {
-    aiSetup.voice = $("coach-voice").checked;
-    store("cm_coach_voice", aiSetup.voice ? "on" : "off");
-    if (!aiSetup.voice && "speechSynthesis" in window) speechSynthesis.cancel();
   };
   $("ai-color").onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
