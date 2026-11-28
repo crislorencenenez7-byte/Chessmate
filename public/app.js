@@ -1711,9 +1711,18 @@ function startRoyalFinale(g) {
 }
 
 function showResultSoon() {
-  if (royalFinaleApplies(G)) { startRoyalFinale(G); return; }
-  playMateFx();
   const g = G;
+  const admins = adminSeatColors(g);
+  const applies = royalFinaleApplies(g);
+  const king = g?.over?.reason === "checkmate"
+    ? $("board")?.querySelector(".sq.checkmate-king") ||
+      (g.over.matedKing ? $("board")?.querySelector(`.sq[data-sq="${g.over.matedKing}"]`) : null)
+    : null;
+
+  toast(`ROYAL FX: ${applies ? "START" : "SKIP"} | Admin: ${user?.isAdmin === true ? "YES" : "NO"} | Seats: ${admins.join(",") || "none"} | King: ${king ? "YES" : "NO"}`);
+
+  if (applies) { startRoyalFinale(g); return; }
+  playMateFx();
   const splash = g?.over?.reason === "checkmate" && !!mateFxKey();
   setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, splash ? MATE_SPLASH_MS - 150 : 900);
 }
