@@ -976,13 +976,16 @@ function applyMove(m, o = {}) {
   if (end && !G.over) {
     const online = G.roomCode && ["friends", "ranked"].includes(G.mode);
     G.over = { ...end, pendingServer: online };
-    if (!online) showResultSoon();
   }
 
   if (o.user && G.roomCode && ["friends", "ranked"].includes(G.mode)) {
     socket.emit("room-move", { code: G.roomCode, move: { from: made.from, to: made.to, promotion: made.promotion } });
   }
   render();
+  // Start the end-game sequence only after render() has marked the final mated King
+  // with .checkmate-king. Starting it before render made the Admin finale miss its
+  // King target, so the CHECKMATE BURST / Throw Fire hero sequence was skipped.
+  if (G.over && !G.over.pendingServer) showResultSoon();
   maybeAi();
   if (!o.skipAnalysis) analyzePly(G.plies.length - 1);
   if (!o.suppressPremove && ["ai", "friends", "ranked"].includes(G.mode) && G.live.turn() === G.myColor && G.premove) {
