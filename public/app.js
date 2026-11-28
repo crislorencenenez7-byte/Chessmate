@@ -1626,10 +1626,24 @@ function playAdminRoyalCheckmate(g, winnerColor, reveal) {
 }
 
 function showResultSoon() {
-  playMateFx();
   const g = G;
-  const splash = g?.over?.reason === "checkmate" && !!mateFxKey();
-  setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, splash ? MATE_SPLASH_MS - 150 : 900);
+  const o = g?.over;
+  const winnerColor = o?.result === "white" ? "w" : o?.result === "black" ? "b" : "";
+  const adminWinner = !!winnerColor && g?.names?.[winnerColor]?.isAdmin === true;
+
+  // Admin Royal Checkmate has its own complete animation sequence.
+  if (o?.reason === "checkmate" && adminWinner) {
+    setTimeout(() => {
+      if (G === g && G.over && G.mode !== "analysis") showResult();
+    }, 900);
+    return;
+  }
+
+  playMateFx();
+  const splash = o?.reason === "checkmate" && !!mateFxKey();
+  setTimeout(() => {
+    if (G === g && G.over && G.mode !== "analysis") showResult();
+  }, splash ? MATE_SPLASH_MS - 150 : 900);
 }
 function showResult() {
   const g=G;
@@ -1653,11 +1667,12 @@ function showResult() {
     $("overlay").classList.remove("hidden");
   };
   if(o.reason!=="checkmate"){ reveal(); return; }
-  if(mateFxKey()){ reveal(); return; }   // themed finale already played
 
   const winnerColor = o.result === "white" ? "w" : o.result === "black" ? "b" : "";
   const adminWinner = !!winnerColor && g.names?.[winnerColor]?.isAdmin === true;
   if (adminWinner && playAdminRoyalCheckmate(g, winnerColor, reveal)) return;
+
+  if(mateFxKey()){ reveal(); return; }   // themed finale already played
 
   const board=$("board");
   const king=board?.querySelector(".checkmate-king");
@@ -1833,7 +1848,7 @@ function startAi() {
   const color = aiSetup.color === "r" ? (Math.random() < 0.5 ? "w" : "b") : aiSetup.color;
   const bot = BOT_PROFILES.find(x => x.id === aiSetup.bot) || BOT_PROFILES[4];
   aiSetup.level = bot.level;
-  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player" };
+  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player", isAdmin: user?.isAdmin === true, avatarKey: economyState?.avatar || "avatar_knight" };
   const cpu = { name: bot.name, sub: `${bot.rating} challenge rating` };
   const game = newGame("ai", { orient: color, myColor: color, level: bot.level, bot: bot.id, names: color === "w" ? { w: me, b: cpu } : { w: cpu, b: me } });
 }
