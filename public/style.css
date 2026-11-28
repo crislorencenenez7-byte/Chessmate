@@ -3103,3 +3103,76 @@ body[data-fx="rosewood"] #game .pl, body[data-fx="rosewood"] #game .notation, bo
 [data-pfx="christmas"] .pf-fx i:nth-child(3n) { background: #ffd24a; box-shadow: 0 0 6px #ffd24a; }
 .cosmetic-card.fx-rosewood { border-color: #e9c66ecc !important; background: radial-gradient(ellipse at top, #ff9a3a22, transparent 60%), linear-gradient(145deg, #3a1708aa, #120603f5) !important; box-shadow: 0 0 22px #ff9a3a22, 0 12px 28px #0004; }
 .cosmetic-card.fx-christmas { border-color: #ff6a76cc !important; background: radial-gradient(ellipse at top, #ff4a5a22, transparent 60%), linear-gradient(145deg, #0e3a24aa, #06142ef5) !important; box-shadow: 0 0 22px #ff4a5a22, 0 12px 28px #0004; }
+
+
+/* v2.5.1 — Mobile board fit + precise Christmas square alignment */
+@media (max-width: 700px) {
+  #game .game-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  #game .board-area {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+  }
+
+  #game .eval {
+    flex: 0 0 30px;
+    width: 30px;
+    min-width: 30px;
+    height: var(--bs);
+  }
+
+  #game .eval-bar {
+    width: 17px;
+    max-width: 17px;
+  }
+
+  #game .board-frame {
+    flex: 0 1 var(--bs);
+    width: min(var(--bs), calc(100vw - 2 * var(--pad) - 45px));
+    height: auto;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+  }
+
+  #game #board {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* Christmas squares use the real 8x8 grid as their background.
+   The old full-board bitmap had a different grid and made pieces look offset. */
+#board.theme-christmas {
+  background: #0f4a26 !important;
+  background-image: none !important;
+}
+
+#board.theme-christmas .sq.light {
+  background: linear-gradient(145deg, #fff8e8, #e9d9b8) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px #d2b66b66 !important;
+}
+
+#board.theme-christmas .sq.dark {
+  background: linear-gradient(145deg, #1b7045, #0b482c) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px #d9bd6c55 !important;
+}
+
+#board.theme-christmas .sq .piece {
+  width: 94%;
+  height: 94%;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+  transform: none;
+}

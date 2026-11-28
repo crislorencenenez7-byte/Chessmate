@@ -127,3 +127,11 @@ The Termux `ship.sh` release script schedules the website update banner for 15 m
 - Package and lockfile versions are synchronized at 2.5.0.
 - Service-worker cache advanced to v54 for the updated frontend assets.
 - Runtime SQLite database files, legacy SQLite server files, and local `.before-*` backups are excluded from this clean source archive.
+
+
+## ChessMate v2.5.1 — Board Fit & Christmas Alignment
+
+- Adjusted the mobile game layout so the evaluation bar and chessboard fit together within the viewport.
+- Rebuilt Christmas square backgrounds on the actual 8×8 grid so pieces remain centered and aligned.
+- Package and lockfile versions synchronized at 2.5.1.
+- Service-worker cache advanced to v55.
