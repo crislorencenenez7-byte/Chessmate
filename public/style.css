@@ -3902,6 +3902,21 @@ body[data-fx="admin"] #game .pl.turn, body[data-fx="admin"] #game .pl.active { b
 @keyframes arKingHit { 0% { box-shadow: 0 0 0 0 #fff3bd; transform: scale(1.5); } 100% { box-shadow: 0 0 34px 10px #ffb92eaa; transform: scale(1); } }
 @keyframes arKingPulse { from { box-shadow: 0 0 22px 6px #ffb92e88; } to { box-shadow: 0 0 40px 14px #ffcc4dcc; } }
 
+.ar-king-mark.hit::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border: 3px solid #fff0a8;
+  border-radius: 7px;
+  box-shadow: 0 0 22px 8px #ff9d24cc, inset 0 0 20px #ffcc4d99;
+  pointer-events: none;
+  animation: arSquareImpact .85s ease-out 1;
+}
+@keyframes arSquareImpact {
+  0% { opacity: 1; transform: scale(.62); }
+  100% { opacity: 0; transform: scale(1.38); }
+}
+
 /* ---- premium CHECKMATE banner ---- */
 .ar-banner { position: absolute; left: 50%; top: 50%; width: min(94vw, 780px); z-index: 3; pointer-events: none; perspective: 900px;
   transform: translate(-50%, -50%); }

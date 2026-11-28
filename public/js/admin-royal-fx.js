@@ -367,7 +367,7 @@ export function playAdminFinale(opts) {
       root.append(card);
       const endX = boardRect.left + boardRect.width / 2;
       const cr = card.getBoundingClientRect();
-      const endY = Math.max(cr.height / 2 + 8, boardRect.top - cr.height * 0.25);
+      const endY = Math.max(cr.height / 2 + 8, boardRect.top - cr.height * 0.42);
       card.style.left = endX + "px"; card.style.top = endY + "px";
       const seat = opts.seatEl?.getBoundingClientRect();
       const dx = seat ? seat.left + seat.width / 2 - endX : 0;
