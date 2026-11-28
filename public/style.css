@@ -3690,3 +3690,100 @@ body[data-fx="rosewood"]:has(#game.active) {
   background-image: none !important;
   box-shadow: none !important;
 }
+
+/* v2.5.9 — Rosewood 8x8 artwork alignment */
+#game #board.theme-rose {
+  background-color: #6b2a1a !important;
+  background-image: none !important;
+}
+
+#game #board.theme-rose .sq {
+  background-color: transparent !important;
+  background-image: url("./themes/board-rose.webp") !important;
+  background-size: 800% 800% !important;
+  background-position: var(--board-slice-position, 0% 0%) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+
+/* Keep both themes on the exact same 8x8 grid */
+#game #board.theme-rose,
+#game #board.theme-christmas {
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
+}
+
+/* ================================================================
+   FINAL — ROSEWOOD + CHRISTMAS 8x8 BOARD FIX
+   ================================================================ */
+
+/* Shared exact 8x8 board geometry */
+#game #board.theme-rose,
+#game #board.theme-christmas {
+  display: grid !important;
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
+  overflow: hidden !important;
+  background-image: none !important;
+}
+
+/* ROSEWOOD — original artwork sliced across all 64 squares */
+#game #board.theme-rose {
+  background-color: #6b2a1a !important;
+}
+
+#game #board.theme-rose .sq {
+  background-color: transparent !important;
+  background-image: url("./themes/board-rose.webp") !important;
+  background-size: 800% 800% !important;
+  background-position: var(--board-slice-position, 0% 0%) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+
+/* CHRISTMAS — restore visible alternating green and cream squares */
+#game #board.theme-christmas {
+  background-color: #0b482c !important;
+}
+
+#game #board.theme-christmas .sq {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+#game #board.theme-christmas .sq.light {
+  background-color: #fff0d2 !important;
+  background-image: linear-gradient(
+    145deg,
+    #fff9e9,
+    #e9d9b8
+  ) !important;
+  box-shadow: inset 0 0 0 1px #d2b66b66 !important;
+}
+
+#game #board.theme-christmas .sq.dark {
+  background-color: #0b482c !important;
+  background-image: linear-gradient(
+    145deg,
+    #1d7548,
+    #0b482c
+  ) !important;
+  box-shadow: inset 0 0 0 1px #d9bd6c55 !important;
+}
+
+/* Preserve Christmas frame decorations */
+body[data-fx="christmas"] #game .board-frame::before,
+body[data-fx="christmas"] #game .board-frame::after {
+  content: "" !important;
+  inset: -22px !important;
+  padding: 18px !important;
+  pointer-events: none !important;
+}
+
+body[data-fx="christmas"] #game .board-frame::before {
+  z-index: 0 !important;
+}
+
+body[data-fx="christmas"] #game .board-frame::after {
+  z-index: 3 !important;
+}

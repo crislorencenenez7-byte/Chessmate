@@ -1176,9 +1176,9 @@ function render() {
 
       sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
 
-      // Slice premium board artwork by the actual visible screen coordinates.
-
-      // Rosewood: align the artwork texture to each actual board square.
+      // Exact 8x8 artwork slice coordinates, following screen orientation.
+      sq.style.setProperty("--board-slice-position",
+        `${col * (100 / 7)}% ${row * (100 / 7)}%`);
 
       // Coordinates follow the current screen orientation.
       for (const [type, visible, value] of [
