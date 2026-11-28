@@ -1719,7 +1719,9 @@ function showResultSoon() {
       (g.over.matedKing ? $("board")?.querySelector(`.sq[data-sq="${g.over.matedKing}"]`) : null)
     : null;
 
-  toast(`ROYAL FX: ${applies ? "START" : "SKIP"} | Admin: ${user?.isAdmin === true ? "YES" : "NO"} | Seats: ${admins.join(",") || "none"} | King: ${king ? "YES" : "NO"}`);
+  const winner = g?.over?.result === "white" ? "w" : g?.over?.result === "black" ? "b" : null;
+  const adminWon = !!winner && admins.includes(winner);
+  toast(`ROYAL DEBUG | Winner: ${winner || "draw"} | Admin: ${user?.isAdmin === true} | Admin seats: ${admins.join(",") || "none"} | Admin won: ${adminWon} | King: ${!!king} | Mode: ${g?.mode}`);
 
   if (applies) { startRoyalFinale(g); return; }
   playMateFx();
