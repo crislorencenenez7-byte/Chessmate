@@ -3666,3 +3666,27 @@ body[data-fx="rosewood"]:has(#game.active) {
 #game.active {
   min-height: calc(100dvh - 64px);
 }
+
+/* v2.5.8 — Unified Rosewood and Christmas board alignment */
+#game #board.theme-rose {
+  background-color: #6b2a1a !important;
+  background-image: url("./themes/board-rose.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+#game #board.theme-christmas {
+  background-color: #0b482c !important;
+  background-image: url("./themes/board-christmas.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+#game #board.theme-rose .sq,
+#game #board.theme-christmas .sq {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
