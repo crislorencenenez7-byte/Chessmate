@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1120" role="img" aria-labelledby="title desc">
+<title id="title">ChessMate Admin Royal Chess Board</title>
+<desc id="desc">An eight by eight black and gold marble chessboard surrounded by an ornate royal gold frame, jeweled corners, crowns and coordinates.</desc>
+<defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3b8"/><stop offset=".22" stop-color="#d8a63f"/><stop offset=".48" stop-color="#fff0a0"/><stop offset=".72" stop-color="#95601b"/><stop offset="1" stop-color="#f6d77c"/></linearGradient>
+  <linearGradient id="black" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#252630"/><stop offset=".45" stop-color="#090a10"/><stop offset="1" stop-color="#020307"/></linearGradient>
+  <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b5f4ff"/><stop offset=".4" stop-color="#248fe0"/><stop offset="1" stop-color="#092c76"/></linearGradient>
+  <pattern id="darkMarble" width="90" height="90" patternUnits="userSpaceOnUse"><rect width="90" height="90" fill="#11131a"/><path d="M-8 76L24 49 48 43 98 -5M-8 35L28 18 66 -8" fill="none" stroke="#b68b48" stroke-width="2" opacity=".55"/><path d="M4 92L40 65 68 56" fill="none" stroke="#e8d7ad" stroke-width="1" opacity=".25"/></pattern>
+  <pattern id="goldMarble" width="90" height="90" patternUnits="userSpaceOnUse"><rect width="90" height="90" fill="#c99b48"/><path d="M-8 76L24 49 48 43 98 -5M-8 35L28 18 66 -8" fill="none" stroke="#fff0bd" stroke-width="2" opacity=".65"/><path d="M4 92L40 65 68 56" fill="none" stroke="#704714" stroke-width="2" opacity=".45"/></pattern>
+  <pattern id="checks" width="140" height="140" patternUnits="userSpaceOnUse"><rect width="70" height="70" fill="url(#goldMarble)"/><rect x="70" width="70" height="70" fill="url(#darkMarble)"/><rect y="70" width="70" height="70" fill="url(#darkMarble)"/><rect x="70" y="70" width="70" height="70" fill="url(#goldMarble)"/></pattern>
+  <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <g id="gem"><path d="M0 -25L22 -9 17 17 0 29 -17 17 -22 -9Z" fill="url(#blue)" stroke="url(#gold)" stroke-width="4"/><path d="M0 -25L0 29M-22 -9H22" fill="none" stroke="#c9f5ff" stroke-width="2" opacity=".7"/></g>
+</defs>
+<rect x="12" y="12" width="1176" height="1096" rx="38" fill="#030408" stroke="url(#gold)" stroke-width="14"/>
+<rect x="31" y="31" width="1138" height="1058" rx="28" fill="none" stroke="#76501a" stroke-width="4"/>
+<rect x="43" y="43" width="1114" height="1034" rx="22" fill="none" stroke="url(#gold)" stroke-width="3"/>
+<!-- Top crest -->
+<path d="M270 60H930L985 115 930 170H270L215 115Z" fill="url(#black)" stroke="url(#gold)" stroke-width="7"/>
+<path d="M290 75H910L950 115 910 155H290L250 115Z" fill="none" stroke="#8e682c" stroke-width="2"/>
+<text x="600" y="133" fill="url(#gold)" font-family="Georgia,serif" font-size="58" font-weight="bold" letter-spacing="14" text-anchor="middle" filter="url(#glow)">ADMIN</text>
+<path d="M548 62L570 35 600 58 630 35 652 62" fill="none" stroke="url(#gold)" stroke-width="7"/>
+<use href="#gem" x="600" y="42" transform="translate(600 42) scale(.55) translate(-600 -42)"/>
+<!-- Board surround -->
+<rect x="238" y="205" width="724" height="724" rx="12" fill="url(#black)" stroke="url(#gold)" stroke-width="12"/>
+<rect x="253" y="220" width="694" height="694" rx="5" fill="none" stroke="#9d742e" stroke-width="3"/>
+<rect x="274" y="241" width="652" height="652" fill="url(#checks)" stroke="url(#gold)" stroke-width="5"/>
+<!-- grid -->
+<g stroke="#f5dfa6" stroke-width="2" opacity=".8">
+<path d="M355.5 241V893M437 241V893M518.5 241V893M600 241V893M681.5 241V893M763 241V893M844.5 241V893"/>
+<path d="M274 322.5H926M274 404H926M274 485.5H926M274 567H926M274 648.5H926M274 730H926M274 811.5H926"/>
+</g>
+<!-- Side columns -->
+<g fill="url(#black)" stroke="url(#gold)" stroke-width="5">
+<path d="M68 310L150 270 222 310V790L150 830 68 790Z"/>
+<path d="M978 310L1050 270 1132 310V790L1050 830 978 790Z"/>
+</g>
+<g fill="none" stroke="#9c702b" stroke-width="3"><path d="M83 330L150 297 207 330V770L150 803 83 770Z"/><path d="M993 330L1050 297 1117 330V770L1050 803 993 770Z"/></g>
+<g fill="url(#gold)" font-family="Georgia,serif" text-anchor="middle"><text x="150" y="490" font-size="115">♛</text><text x="1050" y="490" font-size="115">♛</text><text x="150" y="560" font-size="24" letter-spacing="4">ROYAL</text><text x="1050" y="560" font-size="24" letter-spacing="4">ROYAL</text></g>
+<use href="#gem" x="150" y="655"/><use href="#gem" x="1050" y="655"/>
+<!-- coordinates -->
+<g fill="url(#gold)" font-family="Georgia,serif" font-size="25" font-weight="bold" text-anchor="middle">
+<text x="315" y="231">A</text><text x="396.5" y="231">B</text><text x="478" y="231">C</text><text x="559.5" y="231">D</text><text x="641" y="231">E</text><text x="722.5" y="231">F</text><text x="804" y="231">G</text><text x="885.5" y="231">H</text>
+<text x="315" y="921">A</text><text x="396.5" y="921">B</text><text x="478" y="921">C</text><text x="559.5" y="921">D</text><text x="641" y="921">E</text><text x="722.5" y="921">F</text><text x="804" y="921">G</text><text x="885.5" y="921">H</text>
+<text x="260" y="290">8</text><text x="260" y="371.5">7</text><text x="260" y="453">6</text><text x="260" y="534.5">5</text><text x="260" y="616">4</text><text x="260" y="697.5">3</text><text x="260" y="779">2</text><text x="260" y="860.5">1</text>
+<text x="940" y="290">8</text><text x="940" y="371.5">7</text><text x="940" y="453">6</text><text x="940" y="534.5">5</text><text x="940" y="616">4</text><text x="940" y="697.5">3</text><text x="940" y="779">2</text><text x="940" y="860.5">1</text>
+</g>
+<!-- corner jewels -->
+<use href="#gem" x="82" y="92"/><use href="#gem" x="1118" y="92"/><use href="#gem" x="82" y="1028"/><use href="#gem" x="1118" y="1028"/>
+<path d="M250 990H950" stroke="url(#gold)" stroke-width="5"/>
+<text x="600" y="1042" fill="url(#gold)" font-family="Georgia,serif" font-size="28" letter-spacing="7" text-anchor="middle">CHESSMATE · ROYAL COMMAND</text>
+</svg>

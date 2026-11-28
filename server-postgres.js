@@ -694,12 +694,16 @@ function playerOf(room, socketId) {
 }
 
 function sharedBoardTheme(room) {
-  if (room.players.some(p =>
-    p.user?.isAdmin === true && p.user?.boardKey === "board_obsidian"
-  )) return "board_obsidian";
+  // Admin status is sourced only from the authenticated server-side user record.
+  if (room.players.some(p => p.user?.isAdmin === true)) return "board_admin";
 
-  for (const key of ["board_sapphire", "board_aurora", "board_forest", "board_christmas"]) {
+  // Exclusive Deals boards outrank the seasonal Christmas board.
+  for (const key of ["board_sapphire", "board_obsidian", "board_aurora", "board_forest"]) {
     if (room.players.some(p => p.user?.boardKey === key)) return key;
+  }
+
+  if (room.players.some(p => p.user?.boardKey === "board_christmas")) {
+    return "board_christmas";
   }
 
   return null;
@@ -709,7 +713,9 @@ function playersPayload(room) {
   return room.players.map(p => ({
     username: p.user.username,
     rating: p.user.rating,
-    color: p.color
+    color: p.color,
+    isAdmin: p.user?.isAdmin === true,
+    avatarKey: p.user?.avatar || p.user?.avatarKey || "avatar_knight"
   }));
 }
 

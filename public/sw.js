@@ -1,8 +1,9 @@
-const CACHE = 'chessmate-shell-v64';
+const CACHE = 'chessmate-shell-v66';
 
 const CORE = [
   './',
   './index.html',
+  './themes/admin-board.svg',
   './style.css',
   './app.js',
   './pwa.js',

@@ -6,7 +6,8 @@ export const FX_BY_BOARD = {
   board_sapphire: "sapphire",
   board_obsidian: "obsidian",
   board_aurora: "aurora",
-  board_forest: "forest"
+  board_forest: "forest",
+  board_admin: "admin"
 };
 
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;

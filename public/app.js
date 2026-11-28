@@ -819,12 +819,14 @@ function setPlayers() {
         avatar_tournament_laurel:"🏅"
       };
       const isMe = !!user?.username && n.name === user.username;
-      const avatarKey = isMe ? (economyState?.avatar || "avatar_knight") : "avatar_knight";
+      const avatarKey = isMe ? (economyState?.avatar || "avatar_knight") : (n.avatarKey || "avatar_knight");
       const avatarGlyph = glyphs[avatarKey] || "♞";
+      const isAdminPlayer = n.isAdmin === true;
 
-      el.innerHTML = `<span class="match-avatar">${avatarGlyph}</span><span class="match-player-info"><span class="pn"></span><span class="pr"></span></span>`;
+      el.classList.toggle("admin-player", isAdminPlayer);
+      el.innerHTML = `<span class="match-avatar${isAdminPlayer ? " admin-royal-avatar" : ""}" aria-label="${isAdminPlayer ? "Admin " : ""}profile avatar">${avatarGlyph}${isAdminPlayer ? '<i class="admin-avatar-crown" aria-hidden="true">♛</i>' : ""}</span><span class="match-player-info"><span class="pn"></span><span class="pr"></span></span>`;
       el.querySelector(".pn").textContent = n.name || "Player";
-      el.querySelector(".pr").textContent = n.sub || "";
+      el.querySelector(".pr").textContent = (n.sub || "") + (isAdminPlayer ? " · ADMIN" : "");
     }
   };
   fill($("pl-top"), top);
@@ -1109,10 +1111,10 @@ function render() {
 
   boardEl.classList.remove(
     "theme-christmas", "theme-obsidian", "theme-aurora",
-    "theme-forest", "theme-sapphire"
+    "theme-forest", "theme-sapphire", "theme-admin"
   );
 
-  const savedBoardTheme = G.sharedBoardTheme || economyState.board || "classic";
+  const savedBoardTheme = G.sharedBoardTheme || (user?.isAdmin ? "board_admin" : economyState.board || "classic");
   const boardTheme = savedBoardTheme === "board_rose" ? "classic" : savedBoardTheme;
   const fx = resolveFx(boardTheme);
 
@@ -1123,6 +1125,7 @@ function render() {
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
   if (boardTheme === "board_forest") boardEl.classList.add("theme-forest");
+  if (boardTheme === "board_admin") boardEl.classList.add("theme-admin");
 
   const vc = viewChess();
   const pos = vc.board();
@@ -1569,6 +1572,59 @@ function playMateFx() {
   }, 160);
 }
 
+function playAdminRoyalCheckmate(g, winnerColor, reveal) {
+  if (!g || g._adminMateSequenceStarted) return true;
+  const frame = document.querySelector(`.pl[data-color="${winnerColor}"]`);
+  const avatar = frame?.querySelector(".match-avatar");
+  const board = $("board");
+  const king = board?.querySelector(".sq.checkmate-king");
+  const boardFrame = board?.parentElement;
+  if (!frame || !avatar || !king || !boardFrame) return false;
+
+  g._adminMateSequenceStarted = true;
+  frame.classList.add("admin-victory-rise");
+  avatar.classList.add("admin-avatar-victory");
+
+  const from = avatar.getBoundingClientRect();
+  const to = king.getBoundingClientRect();
+  const fire = document.createElement("div");
+  fire.className = "admin-fire-stream";
+  fire.setAttribute("aria-hidden", "true");
+  fire.style.left = `${from.left + from.width / 2}px`;
+  fire.style.top = `${from.top + from.height / 2}px`;
+  fire.style.setProperty("--fire-dx", `${to.left + to.width / 2 - from.left - from.width / 2}px`);
+  fire.style.setProperty("--fire-dy", `${to.top + to.height / 2 - from.top - from.height / 2}px`);
+  for (let i = 0; i < 7; i++) {
+    const flame = document.createElement("i");
+    flame.style.setProperty("--flame-delay", `${i * 75}ms`);
+    fire.append(flame);
+  }
+  document.body.append(fire);
+  king.classList.add("admin-fire-target");
+  boardFrame.classList.add("admin-checkmate-stage");
+
+  window.setTimeout(() => {
+    if (G !== g) { fire.remove(); return; }
+    fire.remove();
+    const banner = document.createElement("div");
+    banner.className = "admin-checkmate-banner";
+    banner.innerHTML = '<span class="admin-banner-crown" aria-hidden="true">♛</span><strong>CHECKMATE</strong><small>ROYAL VICTORY</small>';
+    boardFrame.append(banner);
+    window.setTimeout(() => {
+      banner.classList.add("out");
+      window.setTimeout(() => {
+        banner.remove();
+        frame.classList.remove("admin-victory-rise");
+        avatar.classList.remove("admin-avatar-victory");
+        king.classList.remove("admin-fire-target");
+        boardFrame.classList.remove("admin-checkmate-stage");
+        reveal();
+      }, 420);
+    }, 1450);
+  }, 1250);
+  return true;
+}
+
 function showResultSoon() {
   playMateFx();
   const g = G;
@@ -1580,9 +1636,14 @@ function showResult() {
   if (!g || !g.over || g._resultSequenceStarted) return;
   g._resultSequenceStarted=true;
   const o=g.over;
-  const title=o.result==="draw" ? "Draw" : G.myColor
+  let title=o.result==="draw" ? "Draw" : G.myColor
     ? (o.result===colorName(G.myColor) ? "You won!" : "You lost")
     : (o.result==="white" ? "White wins" : "Black wins");
+  const adminColor = ["w", "b"].find(c => g.names?.[c]?.isAdmin === true);
+  if (adminColor) {
+    title = o.result === "draw" ? "DRAW"
+      : o.result === colorName(adminColor) ? "ADMIN WON" : "OPPONENT WON";
+  }
   const detail=o.reason.charAt(0).toUpperCase()+o.reason.slice(1);
   const reveal=()=>{
     if(G!==g) return;
@@ -1593,6 +1654,10 @@ function showResult() {
   };
   if(o.reason!=="checkmate"){ reveal(); return; }
   if(mateFxKey()){ reveal(); return; }   // themed finale already played
+
+  const winnerColor = o.result === "white" ? "w" : o.result === "black" ? "b" : "";
+  const adminWinner = !!winnerColor && g.names?.[winnerColor]?.isAdmin === true;
+  if (adminWinner && playAdminRoyalCheckmate(g, winnerColor, reveal)) return;
 
   const board=$("board");
   const king=board?.querySelector(".checkmate-king");
@@ -1777,7 +1842,12 @@ function startOnline(kind, code, players, myName, boardTheme = null) {
   const me = players.find(p => p.username === myName);
   const color = me ? me.color[0] : "w";
   const names = {};
-  for (const p of players) names[p.color[0]] = { name: p.username, sub: p.rating ? String(p.rating) : "" };
+  for (const p of players) names[p.color[0]] = {
+    name: p.username,
+    sub: p.rating ? String(p.rating) : "",
+    isAdmin: p.isAdmin === true,
+    avatarKey: p.avatarKey || "avatar_knight"
+  };
   names.w ??= { name: "White" }; names.b ??= { name: "Black" };
   const game = newGame(kind, { orient: color, myColor: color, roomCode: code, names });
   game.sharedBoardTheme = boardTheme || null;
