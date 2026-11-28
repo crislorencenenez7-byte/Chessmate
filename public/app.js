@@ -1176,6 +1176,16 @@ function render() {
 
       sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
 
+      // Rosewood: align the artwork texture to each actual board square.
+      if (fx === "rosewood") {
+        sq.style.setProperty(
+          "--rose-slice-position",
+          `${(col / 7) * 100}% ${(row / 7) * 100}%`
+        );
+      } else {
+        sq.style.removeProperty("--rose-slice-position");
+      }
+
       // Coordinates follow the current screen orientation.
       for (const [type, visible, value] of [
         ["r", col === 0, String(r + 1)],

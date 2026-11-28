@@ -3559,3 +3559,39 @@ body[data-fx="rosewood"] #game .pl, body[data-fx="rosewood"] #game .notation, bo
     max-width: var(--bs) !important;
   }
 }
+
+/* ================================================================
+   v2.5.5 — ROSEWOOD TEXTURE ALIGNMENT + CHRISTMAS FRAME RESTORE
+   ================================================================ */
+
+/* Each Rosewood square receives its own exact 1/8 texture slice. */
+#game #board.theme-rose {
+  background-image: none !important;
+  background-color: #6b2a1a !important;
+}
+
+#game #board.theme-rose .sq {
+  background-color: transparent !important;
+  background-image: url("./themes/board-rose.webp") !important;
+  background-size: 800% 800% !important;
+  background-position: var(--rose-slice-position, 0% 0%) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+
+/* Restore the original Christmas garland and twinkling-light frame. */
+body[data-fx="christmas"] #game .board-frame::before,
+body[data-fx="christmas"] #game .board-frame::after {
+  content: "" !important;
+  inset: -22px !important;
+  padding: 18px !important;
+  pointer-events: none !important;
+}
+
+body[data-fx="christmas"] #game .board-frame::before {
+  z-index: 0 !important;
+}
+
+body[data-fx="christmas"] #game .board-frame::after {
+  z-index: 3 !important;
+}
