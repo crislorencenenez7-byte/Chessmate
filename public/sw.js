@@ -1,4 +1,4 @@
-const CACHE = 'chessmate-shell-v52';
+const CACHE = 'chessmate-shell-v54';
 
 const CORE = [
   './',
@@ -23,6 +23,11 @@ const CORE = [
   './themes/board-aurora.webp',
   './themes/board-forest.webp',
   './themes/mate-obsidian.webp',
+  './themes/mate-christmas.webp',
+  './themes/mate-rose.webp',
+  './themes/board-rose.webp',
+  './themes/art-christmas.webp',
+  './themes/art-rose.webp',
   './themes/mate-aurora.webp',
   './themes/mate-forest.webp',
   './themes/art-obsidian.webp',

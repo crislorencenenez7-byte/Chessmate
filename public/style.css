@@ -3060,3 +3060,46 @@ body[data-fx] .theme-deco { display: none; }
 .cosmetic-card.fx-sapphire { border-color: #4e97ffcc !important; background: radial-gradient(ellipse at top, #2f7bff2a, transparent 60%), linear-gradient(145deg, #0e2a6caa, #070b1cf5) !important; box-shadow: 0 0 22px #2f7bff33, 0 12px 28px #0004; }
 .cosmetic-feats { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5px; }
 .cosmetic-feats li { font-size: 10.5px; padding: 3px 8px; border-radius: 99px; background: #ffffff12; border: 1px solid #ffffff26; color: #eef2fb; }
+
+
+/* =====================================================================
+   v2.5: Rosewood + Christmas Emerald as Exclusive Deals; compact, non-blocking checkmate splash
+   ===================================================================== */
+#board.theme-rose { background: #6b2a1a url(./themes/board-rose.webp) center / 100% 100% no-repeat; border-radius: 4px; border: 0; outline: 0; }
+#board.theme-rose .sq.light, #board.theme-rose .sq.dark { background: none !important; box-shadow: none; }
+#board.theme-rose .sq .piece { filter: drop-shadow(0 2px 2px #0008); }
+#board.theme-rose .sq.last::before { background: #ffd56a55; }
+#board.theme-rose .sq.dot::after { background: #f3cf6f; box-shadow: 0 0 10px #f3cf6f; }
+#board.theme-rose .sq.light .crd { color: #6b3a14; } #board.theme-rose .sq.dark .crd { color: #f1d3a0; }
+#board.theme-rose .sq.checkmate-king { outline: 3px solid #f4cc65; outline-offset: -4px; z-index: 2; animation: kingPulse .65s ease-in-out infinite alternate; }
+body[data-fx="rosewood"] #board { box-shadow: 0 0 0 3px #d9b24c, 0 0 0 5px #3a1708, 0 0 0 7px #f3d98a, 0 22px 50px #000d; }
+body[data-fx="rosewood"] .board-frame::before { background: linear-gradient(135deg, #f7dd91, #7d4a14 28%, #ffe9b0 50%, #6e3f0e 72%, #f1d27a); }
+body[data-fx="rosewood"] .board-frame::after { background: linear-gradient(90deg, #ffb96a22, #ffd9a0, #ffb96a22 30%, #ffd9a0 55%, #ffb96a22 80%, #ffd9a0); background-size: 100% 100%; will-change: opacity; animation: cm-edge-pulse 3s ease-in-out infinite alternate; }
+body[data-fx="rosewood"]:has(#game.active) { background: radial-gradient(ellipse at 50% 0, #7a3c1466, transparent 55%), radial-gradient(ellipse at 50% 100%, #ffb96a22, transparent 50%), linear-gradient(180deg, #0d0503, #1a0b06 60%, #0a0402); }
+body[data-fx="rosewood"]:has(#game.active) #topbar { background: linear-gradient(100deg, #140805, #2a120a 60%, #140805); border-bottom: 1px solid #e9c66e99; }
+body[data-fx="rosewood"] #game .pl, body[data-fx="rosewood"] #game .notation, body[data-fx="rosewood"] #game .coach-panel { border-color: #e9c66e77; background: #1a0b06cc; }
+/* Christmas bitmap now comes from the artwork (golden snowflakes) */
+#board.theme-christmas { background-color: #0f4a26; }
+
+/* checkmate splash: compact, fits any screen, never blocks the page behind it */
+.mate-splash { pointer-events: none; place-items: center; }
+.ms-dim { opacity: .55; }
+.ms-rays { width: 90vmin; height: 90vmin; margin: -45vmin 0 0 -45vmin; }
+.ms-stage { pointer-events: none; }
+.ms-card { pointer-events: auto; width: auto; height: auto; max-width: min(86vw, 460px); max-height: min(52vh, 52dvh); object-fit: contain; }
+.ms-christmas .ms-dim { background: radial-gradient(ellipse at center, #0a2a5acc 0, #02081cf0 78%); }
+.ms-rosewood .ms-dim { background: radial-gradient(ellipse at center, #5a2a0acc 0, #0d0503f2 78%); }
+.ms-christmas .ms-rays { background: repeating-conic-gradient(rgba(255,230,150,.20) 0 7deg, rgba(255,90,90,.10) 7deg 14deg, transparent 14deg 24deg); }
+.ms-rosewood .ms-rays { background: repeating-conic-gradient(rgba(255,196,110,.20) 0 7deg, transparent 7deg 20deg); }
+.ms-christmas .ms-card { box-shadow: 0 0 0 2px #e9c66e, 0 0 40px #ff5a6a77, 0 14px 50px #000; }
+.ms-rosewood .ms-card { box-shadow: 0 0 0 2px #e9c66e, 0 0 40px #ff9a3a88, 0 14px 50px #000; }
+.ms-christmas .ms-parts span { top: -30px; color: #fff; text-shadow: 0 0 8px #9fd9ff, 0 0 12px #ffd24a; animation: ms-fall var(--t) linear var(--d) both; }
+.ms-rosewood .ms-parts span { bottom: -30px; color: #ffcf7a; text-shadow: 0 0 8px #ff9a3a; animation: ms-rise var(--t) ease-out var(--d) both; }
+
+/* profile animation: Rosewood (amber dust rising) + Christmas (snowfall) */
+[data-pfx="rosewood"] { --pf-c: #f3cf6f; --pf-c2: #ffd9a0; --pf-p: #ffcf7a; border-color: #e9c66ecc; --pf-bg: radial-gradient(ellipse at 20% 100%, #ff9a3a44, transparent 60%), linear-gradient(135deg, #2a120a, #120603); }
+[data-pfx="christmas"] { --pf-c: #ff6a76; --pf-c2: #7be08f; --pf-p: #ffffff; border-color: #ff6a76cc; --pf-bg: linear-gradient(120deg, #c0222f44, #12602e44 55%, #e9c66e33), #06142e; }
+[data-pfx="christmas"] .pf-fx i { bottom: auto; top: -8px; animation-name: pf-fall; }
+[data-pfx="christmas"] .pf-fx i:nth-child(3n) { background: #ffd24a; box-shadow: 0 0 6px #ffd24a; }
+.cosmetic-card.fx-rosewood { border-color: #e9c66ecc !important; background: radial-gradient(ellipse at top, #ff9a3a22, transparent 60%), linear-gradient(145deg, #3a1708aa, #120603f5) !important; box-shadow: 0 0 22px #ff9a3a22, 0 12px 28px #0004; }
+.cosmetic-card.fx-christmas { border-color: #ff6a76cc !important; background: radial-gradient(ellipse at top, #ff4a5a22, transparent 60%), linear-gradient(145deg, #0e3a24aa, #06142ef5) !important; box-shadow: 0 0 22px #ff4a5a22, 0 12px 28px #0004; }

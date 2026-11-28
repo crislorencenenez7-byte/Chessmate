@@ -4,6 +4,13 @@ import { CLASSES, classifyMove, whiteScore, whiteWinPct, scoreText } from "./js/
 import { resolveFx, FX_BY_BOARD, kingRing, lightningStrike, checkmateBurst } from "./js/themes.js";
 import { playThemeMate, MATE_SPLASH_FX, MATE_SPLASH_MS } from "./js/mate-fx.js";
 
+// Exclusive-deal finale of the *equipped* board. (The free Christmas event look on the default board has none.)
+function mateFxKey() {
+  const key = G?.sharedBoardTheme || economyState.board || "classic";
+  const fx = FX_BY_BOARD[key];
+  return MATE_SPLASH_FX.includes(fx) ? fx : "";
+}
+
 const $ = id => document.getElementById(id);
 const FILES = "abcdefgh";
 const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -1111,7 +1118,7 @@ function render() {
   document.body.dataset.fx = fx || "";
   boardEl.classList.toggle("theme-sapphire", boardTheme === "board_sapphire");
 
-  if (boardTheme === "classic") boardEl.classList.add("theme-christmas");
+  if (boardTheme === "classic" || boardTheme === "board_christmas") boardEl.classList.add("theme-christmas");
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
   if (boardTheme === "board_rose") boardEl.classList.add("theme-rose");
@@ -1276,8 +1283,8 @@ function render() {
             { transform: "translate3d(0, 0, 0)" }
           ],
           {
-            duration: fx === "sapphire" ? 600 : MATE_SPLASH_FX.includes(fx) ? 450 : 300,
-            easing: (fx === "sapphire" || MATE_SPLASH_FX.includes(fx))
+            duration: fx === "sapphire" ? 600 : mateFxKey() ? 450 : 300,
+            easing: (fx === "sapphire" || mateFxKey())
               ? "cubic-bezier(.22,1,.36,1)"
               : "cubic-bezier(.16,1,.3,1)",
             fill: "both"
@@ -1549,16 +1556,17 @@ function playMateFx() {
     const board = $("board");
     const king = board?.querySelector(".sq.checkmate-king");
     if (!board || !king) return;
+    const sfx = mateFxKey();
+    if (sfx) { playThemeMate(sfx); return; }
     checkmateBurst(board.parentElement, fx, king);
     if (fx === "sapphire") lightningStrike(king);
-    else if (MATE_SPLASH_FX.includes(fx)) playThemeMate(fx);
   }, 160);
 }
 
 function showResultSoon() {
   playMateFx();
   const g = G;
-  const splash = g?.over?.reason === "checkmate" && MATE_SPLASH_FX.includes(document.body.dataset.fx);
+  const splash = g?.over?.reason === "checkmate" && !!mateFxKey();
   setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, splash ? MATE_SPLASH_MS - 150 : 900);
 }
 function showResult() {
@@ -1578,7 +1586,7 @@ function showResult() {
     $("overlay").classList.remove("hidden");
   };
   if(o.reason!=="checkmate"){ reveal(); return; }
-  if(MATE_SPLASH_FX.includes(document.body.dataset.fx)){ reveal(); return; }   // themed finale already played
+  if(mateFxKey()){ reveal(); return; }   // themed finale already played
 
   const board=$("board");
   const king=board?.querySelector(".checkmate-king");
@@ -1807,7 +1815,7 @@ async function loadEconomy() {
   renderCosmetics(catalog.cosmetics, wallet);
 }
 /* Profile animation that comes with each Exclusive Deals board. */
-const PROFILE_FX = ["obsidian", "aurora", "forest", "sapphire"];
+const PROFILE_FX = ["obsidian", "aurora", "forest", "sapphire", "rosewood", "christmas"];
 function applyProfileFx(boardKey) {
   const fx = PROFILE_FX.includes(FX_BY_BOARD[boardKey]) ? FX_BY_BOARD[boardKey] : "";
   for (const el of [document.querySelector(".profile-card"), document.querySelector(".mini-profile")]) {

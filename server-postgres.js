@@ -375,14 +375,6 @@ app.post("/api/admin/economy/verify-topup", adminAuth, async (req,res) => {
 });
 
 const COSMETICS = {
-  board_christmas: {
-    type: "board",
-    name: "Christmas Emerald",
-    price: 0,
-    event: true,
-    description: "Limited Christmas Event board with green marble and festive effects.",
-    features: ["Free event board", "Snowfall", "Festive checkmate burst"]
-  },
   board_sapphire: {
     type: "board",
     name: "Royal Sapphire",
@@ -406,7 +398,18 @@ const COSMETICS = {
     description: "Frozen crystal marble under the northern lights with an ice-crown checkmate finale.",
     features: ["Ice Crown checkmate", "Northern-lights glow", "Animated profile"]
   },
-  board_rose: { type: "board", name: "Rosewood", price: 8, description: "Warm rosewood and cream." },
+  board_rose: {
+    type: "board", name: "Rosewood", price: 8, premium: true, exclusive: true, deal: true,
+    image: "./themes/art-rose.webp",
+    description: "Polished rosewood and maple with a warm golden-laurel checkmate finale.",
+    features: ["Golden Laurel checkmate", "Warm ember glow", "Animated profile"]
+  },
+  board_christmas: {
+    type: "board", name: "Christmas Emerald", price: 10, premium: true, exclusive: true, deal: true,
+    image: "./themes/art-christmas.webp",
+    description: "Emerald marble with golden snowflakes, holly frame and a festive golden-kings checkmate finale.",
+    features: ["Golden Kings checkmate", "Snowfall & twinkle lights", "Animated profile"]
+  },
   board_forest: {
     type: "board", name: "Forests", price: 8, premium: true, exclusive: true, deal: true,
     image: "./themes/art-forest.webp",
@@ -701,7 +704,7 @@ function sharedBoardTheme(room) {
     p.user?.isAdmin === true && p.user?.boardKey === "board_obsidian"
   )) return "board_obsidian";
 
-  for (const key of ["board_sapphire", "board_aurora", "board_forest"]) {
+  for (const key of ["board_sapphire", "board_aurora", "board_forest", "board_rose", "board_christmas"]) {
     if (room.players.some(p => p.user?.boardKey === key)) return key;
   }
 

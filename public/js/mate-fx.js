@@ -5,10 +5,12 @@
 const SCENES = {
   obsidian: { img: "./themes/mate-obsidian.webp", glyphs: ["✦", "✧", "♛", "✦"], sound: "gong" },
   aurora:   { img: "./themes/mate-aurora.webp",   glyphs: ["❄", "❅", "✦", "❆"], sound: "glass" },
-  forest:   { img: "./themes/mate-forest.webp",   glyphs: ["🍃", "🌿", "✦", "🍂"], sound: "wood" }
+  forest:   { img: "./themes/mate-forest.webp",   glyphs: ["🍃", "🌿", "✦", "🍂"], sound: "wood" },
+  christmas:{ img: "./themes/mate-christmas.webp", glyphs: ["❄", "❅", "★", "✦"], sound: "bells" },
+  rosewood: { img: "./themes/mate-rose.webp",      glyphs: ["✦", "✧", "❖", "✦"], sound: "marimba" }
 };
 export const MATE_SPLASH_FX = Object.keys(SCENES);
-export const MATE_SPLASH_MS = 3300;
+export const MATE_SPLASH_MS = 2900;
 
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 let ctx = null;
@@ -42,6 +44,11 @@ function playSound(kind) {
     } else if (kind === "glass") {               // crystalline ice tinkle
       [1568, 2093, 2637, 3136].forEach((f, i) => tone(ctx, t + i * 0.09, f, 1.3, "sine", 0.08));
       tone(ctx, t, 196, 1.8, "sine", 0.12);
+    } else if (kind === "bells") {               // sleigh-bell chimes
+      [1319, 1568, 1976, 2637, 1976, 2637].forEach((f, i) => tone(ctx, t + i * 0.13, f, 0.9, "sine", 0.08));
+      tone(ctx, t, 262, 1.4, "triangle", 0.08);
+    } else if (kind === "marimba") {             // warm rosewood marimba arpeggio
+      [262, 330, 392, 523].forEach((f, i) => { tone(ctx, t + i * 0.11, f, 0.9, "triangle", 0.2); tone(ctx, t + i * 0.11, f * 2, 0.5, "sine", 0.06); });
     } else {                                     // warm wooden bell + breeze
       tone(ctx, t, 392, 1.6, "triangle", 0.16);
       tone(ctx, t + 0.12, 587, 1.4, "sine", 0.1);
@@ -84,7 +91,7 @@ export function playThemeMate(fx) {
     root.classList.add("out");
     setTimeout(() => root.remove(), 450);
   };
-  root.addEventListener("pointerdown", close, { once: true });
+  root.querySelector(".ms-card").addEventListener("pointerdown", close, { once: true });
   document.body.append(root);
   playSound(scene.sound);
   setTimeout(close, MATE_SPLASH_MS - 450);
