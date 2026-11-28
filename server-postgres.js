@@ -398,12 +398,6 @@ const COSMETICS = {
     description: "Frozen crystal marble under the northern lights with an ice-crown checkmate finale.",
     features: ["Ice Crown checkmate", "Northern-lights glow", "Animated profile"]
   },
-  board_rose: {
-    type: "board", name: "Rosewood", price: 8, premium: true, exclusive: true, deal: true,
-    image: "./themes/art-rose.webp",
-    description: "Polished rosewood and maple with a warm golden-laurel checkmate finale.",
-    features: ["Golden Laurel checkmate", "Warm ember glow", "Animated profile"]
-  },
   board_christmas: {
     type: "board", name: "Christmas Emerald", price: 10, premium: true, exclusive: true, deal: true,
     image: "./themes/art-christmas.webp",
@@ -704,7 +698,7 @@ function sharedBoardTheme(room) {
     p.user?.isAdmin === true && p.user?.boardKey === "board_obsidian"
   )) return "board_obsidian";
 
-  for (const key of ["board_sapphire", "board_aurora", "board_forest", "board_rose", "board_christmas"]) {
+  for (const key of ["board_sapphire", "board_aurora", "board_forest", "board_christmas"]) {
     if (room.players.some(p => p.user?.boardKey === key)) return key;
   }
 

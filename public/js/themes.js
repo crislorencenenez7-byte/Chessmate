@@ -6,8 +6,7 @@ export const FX_BY_BOARD = {
   board_sapphire: "sapphire",
   board_obsidian: "obsidian",
   board_aurora: "aurora",
-  board_forest: "forest",
-  board_rose: "rosewood"
+  board_forest: "forest"
 };
 
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -244,7 +243,6 @@ export function checkmateBurst(frameEl, fx, squareEl) {
     : fx === "obsidian" ? ["✦", "✧", "♛"]
     : fx === "aurora" ? ["❄", "✦", "❅"]
     : fx === "forest" ? ["🍃", "✦", "🌿"]
-    : fx === "rosewood" ? ["✦", "✧", "❖"]
     : ["✦", "✧", "⚡"];
   for (let n = 0; n < 18; n++) {
     const p = document.createElement("span");

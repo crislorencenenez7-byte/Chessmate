@@ -1109,10 +1109,11 @@ function render() {
 
   boardEl.classList.remove(
     "theme-christmas", "theme-obsidian", "theme-aurora",
-    "theme-rose", "theme-forest", "theme-sapphire"
+    "theme-forest", "theme-sapphire"
   );
 
-  const boardTheme = G.sharedBoardTheme || economyState.board || "classic";
+  const savedBoardTheme = G.sharedBoardTheme || economyState.board || "classic";
+  const boardTheme = savedBoardTheme === "board_rose" ? "classic" : savedBoardTheme;
   const fx = resolveFx(boardTheme);
 
   document.body.dataset.fx = fx || "";
@@ -1121,7 +1122,6 @@ function render() {
   if (boardTheme === "classic" || boardTheme === "board_christmas") boardEl.classList.add("theme-christmas");
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
-  if (boardTheme === "board_rose") boardEl.classList.add("theme-rose");
   if (boardTheme === "board_forest") boardEl.classList.add("theme-forest");
 
   const vc = viewChess();
@@ -1176,9 +1176,11 @@ function render() {
 
       sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
 
-      // Exact 8x8 artwork slice coordinates, following screen orientation.
+      // Map the 8x8 chessboard onto the 7x7 Rosewood source artwork.
+      const sourceCol = (col / 7) * 6;
+      const sourceRow = (row / 7) * 6;
       sq.style.setProperty("--board-slice-position",
-        `${col * (100 / 7)}% ${row * (100 / 7)}%`);
+        `${sourceCol * (100 / 6)}% ${sourceRow * (100 / 6)}%`);
 
       // Coordinates follow the current screen orientation.
       for (const [type, visible, value] of [
@@ -1819,7 +1821,7 @@ async function loadEconomy() {
   renderCosmetics(catalog.cosmetics, wallet);
 }
 /* Profile animation that comes with each Exclusive Deals board. */
-const PROFILE_FX = ["obsidian", "aurora", "forest", "sapphire", "rosewood", "christmas"];
+const PROFILE_FX = ["obsidian", "aurora", "forest", "sapphire", "christmas"];
 function applyProfileFx(boardKey) {
   const fx = PROFILE_FX.includes(FX_BY_BOARD[boardKey]) ? FX_BY_BOARD[boardKey] : "";
   for (const el of [document.querySelector(".profile-card"), document.querySelector(".mini-profile")]) {
