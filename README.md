@@ -135,3 +135,12 @@ The Termux `ship.sh` release script schedules the website update banner for 15 m
 - Rebuilt Christmas square backgrounds on the actual 8×8 grid so pieces remain centered and aligned.
 - Package and lockfile versions synchronized at 2.5.1.
 - Service-worker cache advanced to v55.
+
+
+## ChessMate v2.5.2 — True Board Alignment
+
+- Replaced the compressed flex sizing with a fixed evaluation column and a square board grid.
+- The board now uses a strict 8×8 CSS grid with equal square tracks.
+- Christmas tiles use the real 64 board squares rather than the supplied 7×7 bitmap.
+- All piece SVGs are centered in identical 94% square image boxes.
+- Package versions synchronized at 2.5.2; service-worker cache advanced to v56.

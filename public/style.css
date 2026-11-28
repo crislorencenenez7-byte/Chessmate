@@ -3176,3 +3176,149 @@ body[data-fx="rosewood"] #game .pl, body[data-fx="rosewood"] #game .notation, bo
   margin: auto;
   transform: none;
 }
+
+
+/* ================================================================
+   v2.5.2 — TRUE BOARD ALIGNMENT
+   The old Christmas board artwork is a 7x7 bitmap, not an 8x8 board.
+   Use the actual 64 DOM squares for all tile geometry instead.
+   ================================================================ */
+
+/* One exact square grid; the evaluation column can never squeeze the board. */
+#game .board-area {
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: min(100%, calc(var(--bs) + 36px)) !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-inline: auto !important;
+}
+
+#game .eval {
+  grid-column: 1;
+  grid-row: 1;
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  align-self: stretch !important;
+  gap: 4px !important;
+}
+
+#game .eval-label {
+  width: 100% !important;
+  min-height: 18px !important;
+  overflow: visible !important;
+}
+
+#game .eval-label span {
+  font-size: 10px !important;
+  padding: 2px 3px !important;
+}
+
+#game .eval-bar {
+  width: 17px !important;
+  max-width: 17px !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+#game .board-frame {
+  grid-column: 2;
+  grid-row: 1;
+  width: min(100%, var(--bs)) !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  flex: none !important;
+  align-self: start !important;
+  filter: none;
+}
+
+#game #board {
+  position: relative !important;
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
+  overflow: hidden;
+  border: 0 !important;
+  outline: 0 !important;
+  border-radius: 4px !important;
+  background-image: none !important;
+  box-shadow: 0 0 0 3px #c8a45b, 0 12px 28px #0009 !important;
+}
+
+/* Explicit 8x8 square colors: every piece is centered in a real DOM square. */
+#game #board.theme-christmas .sq.light {
+  background: linear-gradient(145deg, #fff9e9, #e9d9b8) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px #d2b66b55 !important;
+}
+#game #board.theme-christmas .sq.dark {
+  background: linear-gradient(145deg, #1d7548, #0b482c) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px #d9bd6c55 !important;
+}
+
+/* Normalize the piece image box so all 12 SVGs occupy the same square footprint. */
+#game #board .sq {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: visible;
+}
+#game #board .sq > img.piece {
+  position: absolute !important;
+  inset: 3% !important;
+  display: block !important;
+  width: 94% !important;
+  height: 94% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+}
+
+/* Keep the evaluation and board together on narrow phones too. */
+@media (max-width: 700px) {
+  #game .board-area {
+    width: min(100%, calc(100vw - 2 * var(--pad))) !important;
+    grid-template-columns: 25px minmax(0, 1fr) !important;
+    gap: 7px !important;
+  }
+  #game .eval {
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+  }
+  #game .eval-bar {
+    width: 15px !important;
+    max-width: 15px !important;
+  }
+  #game .board-frame {
+    width: 100% !important;
+    max-width: var(--bs) !important;
+  }
+}
+
+/* Preserve square proportions in landscape without allowing a wide board. */
+@media (max-height: 560px) and (orientation: landscape) {
+  #game .board-area {
+    width: min(100%, calc(var(--bs) + 32px)) !important;
+  }
+}
