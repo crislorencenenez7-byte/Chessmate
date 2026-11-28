@@ -3595,3 +3595,74 @@ body[data-fx="christmas"] #game .board-frame::before {
 body[data-fx="christmas"] #game .board-frame::after {
   z-index: 3 !important;
 }
+
+
+/* v2.5.6 — ROSEWOOD, CHRISTMAS AND FULL-SCREEN BACKGROUND FIX */
+
+/* Rosewood: each real DOM square displays its own matching texture slice. */
+#game #board.theme-rose {
+  background: #6b2a1a !important;
+  background-image: none !important;
+}
+#game #board.theme-rose .sq {
+  background-color: #6b2a1a !important;
+  background-image: url("./themes/board-rose.webp") !important;
+  background-size: 800% 800% !important;
+  background-position: var(--board-slice-position, 0% 0%) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+
+/* Christmas: restore the original artwork across the exact 8x8 DOM grid. */
+#game #board.theme-christmas {
+  background-color: #0b482c !important;
+  background-image: none !important;
+}
+#game #board.theme-christmas .sq,
+#game #board.theme-christmas .sq.light,
+#game #board.theme-christmas .sq.dark {
+  background-color: #0b482c !important;
+  background-image: url("./themes/board-christmas.webp") !important;
+  background-size: 800% 800% !important;
+  background-position: var(--board-slice-position, 0% 0%) !important;
+  background-repeat: no-repeat !important;
+  box-shadow: none !important;
+}
+
+/* Restore the Christmas garland and lights around the board. */
+body[data-fx="christmas"] #game .board-frame::before,
+body[data-fx="christmas"] #game .board-frame::after {
+  content: "" !important;
+  inset: -22px !important;
+  padding: 18px !important;
+  pointer-events: none !important;
+}
+body[data-fx="christmas"] #game .board-frame::before {
+  z-index: 0 !important;
+}
+body[data-fx="christmas"] #game .board-frame::after {
+  z-index: 3 !important;
+}
+
+/* Keep the selected board theme extending to the bottom of the viewport. */
+html:has(#game.active) {
+  min-height: 100% !important;
+  background-color: #071426 !important;
+}
+body:has(#game.active) {
+  min-height: 100dvh !important;
+  background-attachment: fixed !important;
+}
+body[data-fx="christmas"]:has(#game.active) {
+  background:
+    radial-gradient(ellipse at 50% 0%, #174c6688, transparent 58%),
+    linear-gradient(180deg, #071a30, #09243a 65%, #061426) !important;
+}
+body[data-fx="rosewood"]:has(#game.active) {
+  background:
+    radial-gradient(ellipse at 50% 0%, #7a3c1466, transparent 55%),
+    linear-gradient(180deg, #160804, #241008 65%, #100603) !important;
+}
+#game.active {
+  min-height: calc(100dvh - 64px);
+}

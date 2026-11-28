@@ -1176,6 +1176,16 @@ function render() {
 
       sq.className = "sq " + ((f + r) % 2 === 0 ? "dark" : "light");
 
+      // Slice premium board artwork by the actual visible screen coordinates.
+      if (boardTheme === "board_rose" || boardTheme === "board_christmas") {
+        sq.style.setProperty(
+          "--board-slice-position",
+          `${(col / 7) * 100}% ${(row / 7) * 100}%`
+        );
+      } else {
+        sq.style.removeProperty("--board-slice-position");
+      }
+
       // Rosewood: align the artwork texture to each actual board square.
       if (fx === "rosewood") {
         sq.style.setProperty(
