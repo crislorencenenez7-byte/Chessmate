@@ -1665,7 +1665,18 @@ function playMateFx() {
 /* Admin Royal finale: used whenever a verified Admin is seated (server-reported online, or the signed-in
    Admin against the computer). Visual only: the result itself is still decided by chess rules/the server. */
 function royalFinaleApplies(g) {
-  return !!g && g.mode !== "analysis" && !!g.over && !g.over.pendingServer && adminSeatColors(g).length > 0;
+  const admins = adminSeatColors(g);
+  const applies = !!g && g.mode !== "analysis" && !!g.over && !g.over.pendingServer && admins.length > 0;
+  console.info("[Admin Royal diagnostic]", {
+    mode: g?.mode,
+    username: user?.username,
+    isAdmin: user?.isAdmin,
+    admins,
+    over: !!g?.over,
+    pendingServer: !!g?.over?.pendingServer,
+    applies
+  });
+  return applies;
 }
 function startRoyalFinale(g) {
   if (g._royalStarted) return;                        // repeated game-over events never replay it
