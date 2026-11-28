@@ -10,15 +10,11 @@
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<div class="christmas-snow" aria-hidden="true"></div>
 <div class="app">
 
 <header id="topbar">
   <a class="brand" href="#" id="brand">
-<span class="christmas-brand-mark">
-<img src="./pieces/wN.svg" alt="" width="30" height="30">
-<span class="elf-hat" aria-hidden="true"><i></i></span>
-</span><span>Chess<b>Mate</b></span></a>
+<img src="./pieces/wN.svg" alt="" width="30" height="30"><span>Chess<b>Mate</b></span></a>
   <div class="header-right">
     <span id="user-rating" class="rating">Guest</span>
     <button id="auth-open" class="ghost small">Log in</button>
@@ -54,16 +50,6 @@
         <span class="sound-icon">♫</span>
         <span class="sound-label">Sound On</span>
       </button>
-      <div class="christmas-music-control">
-        <button id="christmas-music-toggle" class="home-sound-toggle christmas-music-toggle" type="button" aria-pressed="false">
-          <span class="sound-icon">🎄</span>
-          <span id="christmas-music-label">Christmas Music Off</span>
-        </button>
-        <label class="christmas-volume-control" for="christmas-music-volume">
-          <span>Music Volume <strong id="christmas-volume-label">82%</strong></span>
-          <input id="christmas-music-volume" type="range" min="0" max="100" value="82">
-        </label>
-      </div>
     </div>
     <div class="hero-board" id="hero-board" aria-hidden="true"></div>
   </div>
@@ -352,7 +338,6 @@
       <ol class="admin-royal-priority">
         <li><b>Admin Royal Board</b> when a verified Admin is playing</li>
         <li><b>Exclusive Deals board</b> when no Admin is present</li>
-        <li><b>Christmas Board</b> when nothing higher applies</li>
         <li><b>Classic Board</b> as the fallback</li>
       </ol>
       <button id="admin-royal-replay" class="secondary" type="button">Preview Checkmate Animation</button>

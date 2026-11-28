@@ -1,11 +1,12 @@
 {
   "enabled": true,
-  "scheduledAt": "2026-11-28T04:08:31.961Z",
-  "date": "Nov 28, 2026, 12:08 PM (Philippines time)",
-  "title": "ChessMate v2.5.9 Scheduled Update",
+  "scheduledAt": "2026-11-28T13:53:31.722Z",
+  "date": "Nov 28, 2026, 9:53 PM (Philippines time)",
+  "title": "ChessMate v2.6.7 Scheduled Update",
   "description": [
-    "Removing RoseWood because of unfixable squares"
+    "No more Christmas Related Event",
+    "Back December 10"
   ],
-  "version": "2.5.9",
-  "countdownMinutes": 3
+  "version": "2.6.7",
+  "countdownMinutes": 20
 }

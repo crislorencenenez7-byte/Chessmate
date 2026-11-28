@@ -405,12 +405,6 @@ const COSMETICS = {
     description: "Frozen crystal marble under the northern lights with an ice-crown checkmate finale.",
     features: ["Ice Crown checkmate", "Northern-lights glow", "Animated profile"]
   },
-  board_christmas: {
-    type: "board", name: "Christmas Emerald", price: 10, premium: true, exclusive: true, deal: true,
-    image: "./themes/art-christmas.webp",
-    description: "Emerald marble with golden snowflakes, holly frame and a festive golden-kings checkmate finale.",
-    features: ["Golden Kings checkmate", "Snowfall & twinkle lights", "Animated profile"]
-  },
   board_forest: {
     type: "board", name: "Forests", price: 8, premium: true, exclusive: true, deal: true,
     image: "./themes/art-forest.webp",
@@ -715,9 +709,8 @@ function playerOf(room, socketId) {
 // ---------------------------------------------------------------------------
 const ADMIN_BOARD_KEY = "board_admin_royal";
 const EXCLUSIVE_BOARD_PRIORITY = [
-  "board_sapphire", "board_obsidian", "board_aurora", "board_forest", "board_christmas"
+  "board_sapphire", "board_obsidian", "board_aurora", "board_forest",
 ];
-const CHRISTMAS_BOARD_EVENT = String(process.env.CHRISTMAS_BOARD_EVENT ?? "true").toLowerCase() !== "false";
 
 function isEligibleExclusiveBoard(key) {
   const item = COSMETICS[key];
@@ -732,7 +725,7 @@ function selectBoardTheme(room) {
     if (room.players.some(p => p.user?.boardKey === key)) return key;
   }
 
-  return CHRISTMAS_BOARD_EVENT ? "christmas" : "classic";
+  return "classic";
 }
 
 function sharedBoardTheme(room) {

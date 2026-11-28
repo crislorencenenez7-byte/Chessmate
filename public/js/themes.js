@@ -1,8 +1,7 @@
-// ChessMate board themes: Christmas Event (green) and Exclusive Deals "Royal Sapphire" (blue).
+// ChessMate board themes and visual effects.
 // Visual effects only. Ownership/pricing is enforced server-side (see COSMETICS in the server).
 
 export const FX_BY_BOARD = {
-  board_christmas: "christmas",
   board_sapphire: "sapphire",
   board_obsidian: "obsidian",
   board_aurora: "aurora",
@@ -12,16 +11,12 @@ export const FX_BY_BOARD = {
 
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-/** Resolve which fx pack ("christmas" | "sapphire" | "") applies to the equipped board. */
+/** Resolve which visual-effects pack applies to the equipped board. */
 export function resolveFx(boardKey) {
   const key = boardKey || "classic";
   if (FX_BY_BOARD[key]) return FX_BY_BOARD[key];
   // Values chosen by the server for multiplayer rooms (both players receive the same one).
-  if (key === "christmas_event") return "christmas";
   if (key === "classic_plain") return "";
-  // Christmas Event: players still on the default board get the festive board.
-  // Disable by setting window.CHESSMATE_CHRISTMAS_EVENT = false in config.js.
-  if (key === "classic" && window.CHESSMATE_CHRISTMAS_EVENT !== false) return "christmas";
   return "";
 }
 
@@ -224,7 +219,7 @@ export function lightningStrike(squareEl) {
     });
 }
 
-/** Checkmate burst. Sapphire: shockwave rings; Christmas: snowflake/gold sparkle. */
+/** Checkmate burst effects for equipped boards. */
 export function checkmateBurst(frameEl, fx, squareEl) {
   if (!frameEl || reduceMotion()) return;
   const fr = frameEl.getBoundingClientRect();
@@ -243,8 +238,7 @@ export function checkmateBurst(frameEl, fx, squareEl) {
       wrap.append(ring);
     }
   }
-  const glyphs = fx === "christmas" ? ["❄", "✦", "❅", "✧", "★"]
-    : fx === "obsidian" ? ["✦", "✧", "♛"]
+  const glyphs = fx === "obsidian" ? ["✦", "✧", "♛"]
     : fx === "aurora" ? ["❄", "✦", "❅"]
     : fx === "forest" ? ["🍃", "✦", "🌿"]
     : fx === "admin" ? ["✦", "♛", "✧"]

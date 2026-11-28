@@ -9,7 +9,7 @@ const description = process.argv.slice(2).join(" ").trim() ||
   "ChessMate improvements and new features";
 
 const now = new Date();
-const release = new Date(now.getTime() + 3 * 60 * 1000);
+const release = new Date(now.getTime() + 20 * 60 * 1000);
 const date = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",
   timeStyle: "short",
@@ -23,10 +23,10 @@ const config = {
   title: `ChessMate v${version} Scheduled Update`,
   description: description.split("|").map(x => x.trim()).filter(Boolean),
   version,
-  countdownMinutes: 3
+  countdownMinutes: 20
 };
 
 fs.writeFileSync(file, JSON.stringify(config, null, 2) + "\n");
 console.log("Scheduled ChessMate update for:", config.date);
-console.log("Countdown: 3 minutes from now");
+console.log("Countdown: 20 minutes from now");
 console.log("Description:", config.description.join(" • "));

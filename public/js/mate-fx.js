@@ -6,7 +6,6 @@ const SCENES = {
   obsidian: { img: "./themes/mate-obsidian.webp", glyphs: ["✦", "✧", "♛", "✦"], sound: "gong" },
   aurora:   { img: "./themes/mate-aurora.webp",   glyphs: ["❄", "❅", "✦", "❆"], sound: "glass" },
   forest:   { img: "./themes/mate-forest.webp",   glyphs: ["🍃", "🌿", "✦", "🍂"], sound: "wood" },
-  christmas:{ img: "./themes/mate-christmas.webp", glyphs: ["❄", "❅", "★", "✦"], sound: "bells" },
   rosewood: { img: "./themes/mate-rose.webp",      glyphs: ["✦", "✧", "❖", "✦"], sound: "marimba" }
 };
 export const MATE_SPLASH_FX = Object.keys(SCENES);
