@@ -3322,3 +3322,110 @@ body[data-fx="rosewood"] #game .pl, body[data-fx="rosewood"] #game .notation, bo
     width: min(100%, calc(var(--bs) + 32px)) !important;
   }
 }
+
+/* ================================================================
+   v2.5.3 — RESTORE PREMIUM BOARD ART + FRAME ALIGNMENT
+   ================================================================ */
+
+/* Restore each original baked board artwork. */
+#game #board.theme-christmas {
+  background-image: url("./themes/board-christmas.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+#game #board.theme-sapphire {
+  background-image: url("./themes/board-sapphire.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+#game #board.theme-obsidian {
+  background-image: url("./themes/board-obsidian.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+#game #board.theme-aurora {
+  background-image: url("./themes/board-aurora.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+#game #board.theme-forest {
+  background-image: url("./themes/board-forest.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+#game #board.theme-rose {
+  background-image: url("./themes/board-rose.webp") !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Keep all 64 DOM squares transparent over the artwork. */
+#game #board.theme-christmas .sq,
+#game #board.theme-sapphire .sq,
+#game #board.theme-obsidian .sq,
+#game #board.theme-aurora .sq,
+#game #board.theme-forest .sq,
+#game #board.theme-rose .sq {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Restore each board's own frame instead of forcing gold on every theme. */
+#game #board.theme-christmas,
+#game #board.theme-rose {
+  box-shadow: 0 0 0 3px #d9b24c, 0 0 0 5px #5a4210,
+              0 0 0 7px #f3d98a, 0 22px 50px #000c !important;
+}
+#game #board.theme-sapphire {
+  box-shadow: 0 0 0 3px #3b8dff, 0 0 0 5px #10285f,
+              0 0 0 7px #8fc6ff, 0 22px 50px #000c !important;
+}
+#game #board.theme-obsidian {
+  box-shadow: 0 0 0 3px #d9b24c, 0 0 0 5px #2a1d05,
+              0 0 0 7px #f3d98a, 0 22px 50px #000d !important;
+}
+#game #board.theme-aurora {
+  box-shadow: 0 0 0 3px #9fe6ff, 0 0 0 5px #1b5f86,
+              0 0 0 7px #e4fbff, 0 22px 50px #000c !important;
+}
+#game #board.theme-forest {
+  box-shadow: 0 0 0 3px #7a5528, 0 0 0 5px #2c1a0a,
+              0 0 0 7px #a47a3d, 0 22px 50px #000c !important;
+}
+
+/* Prevent decorative frame layers from covering the evaluation column. */
+#game .board-frame::before,
+#game .board-frame::after {
+  inset: -10px !important;
+  padding: 7px !important;
+}
+
+/* Give the evaluation bar its own clear column on mobile. */
+#game .board-area {
+  grid-template-columns: 24px minmax(0, 1fr) !important;
+  column-gap: 18px !important;
+  overflow: visible !important;
+}
+#game .eval {
+  grid-column: 1 !important;
+  position: relative !important;
+  z-index: 4 !important;
+}
+#game .board-frame {
+  grid-column: 2 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+@media (max-width: 700px) {
+  #game .board-area {
+    grid-template-columns: 24px minmax(0, 1fr) !important;
+    column-gap: 18px !important;
+  }
+}
