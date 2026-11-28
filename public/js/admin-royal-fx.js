@@ -300,7 +300,7 @@ export function playAdminFinale(opts) {
     root.className = "ar-root" + (calm ? " ar-calm" : "");
     root.setAttribute("role", "presentation");
     ensureDefs();
-    root.innerHTML = `<div class="ar-dim"></div><div class="ar-skip">Tap to skip</div>`;
+    root.innerHTML = `<div class="ar-dim"></div><div class="ar-skip">Admin Royal Finale</div>`;
     document.body.append(root);
 
     const run = { id, root, timers: [], raf: 0, dead: false, resolve };
@@ -322,7 +322,7 @@ export function playAdminFinale(opts) {
       setTimeout(() => root.remove(), 380);
       resolve("done");
     };
-    root.addEventListener("click", () => { if (alive()) finish(); });   // tap to skip straight to the result
+    // No tap-to-skip: preserve the complete Admin Royal finale sequence.
 
     const banner = buildBanner();
     root.append(banner);
