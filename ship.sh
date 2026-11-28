@@ -51,7 +51,11 @@ PY
 
 git add ship.sh README.md db.js server-postgres.js package.json package-lock.json \
   public/app.js public/index.html public/style.css public/pwa.js public/sw.js \
-  public/update.json scripts/schedule-update.mjs
+  public/update.json scripts/schedule-update.mjs \
+  public/js/admin-royal-fx.js scripts/build-admin-board.mjs \
+  public/themes/admin-frame.svg public/themes/admin-panel-left.svg \
+  public/themes/admin-panel-right.svg public/themes/admin-royal-board.svg \
+  public/themes/board-admin.svg
 
 if git diff --cached --name-only | grep -Ei '(^|/)(\.env($|\.)|.*\.db$|.*\.sqlite3?$|.*backup.*|.*\.bak$|.*\.pem$|.*\.key$|id_rsa)'; then
   echo "ERROR: May sensitive o backup file. Push cancelled."
@@ -64,7 +68,8 @@ echo "===== FILES TO PUSH ====="
 git diff --cached --name-only
 git diff --cached --stat
 
-git commit -m "Release ChessMate v2.3.0 - Clans and Championship Tournament"
+VERSION="$(node -p "require('./package.json').version")"
+git commit -m "Release ChessMate v${VERSION}"
 git push origin main
 
 echo "===== GITHUB PUSH COMPLETE ====="

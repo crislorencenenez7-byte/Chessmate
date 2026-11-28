@@ -7,7 +7,7 @@ export const FX_BY_BOARD = {
   board_obsidian: "obsidian",
   board_aurora: "aurora",
   board_forest: "forest",
-  board_admin: "admin"
+  board_admin_royal: "admin"          // Admin Royal Board: server-selected when a verified Admin is seated
 };
 
 const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -16,6 +16,9 @@ const reduceMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)
 export function resolveFx(boardKey) {
   const key = boardKey || "classic";
   if (FX_BY_BOARD[key]) return FX_BY_BOARD[key];
+  // Values chosen by the server for multiplayer rooms (both players receive the same one).
+  if (key === "christmas_event") return "christmas";
+  if (key === "classic_plain") return "";
   // Christmas Event: players still on the default board get the festive board.
   // Disable by setting window.CHESSMATE_CHRISTMAS_EVENT = false in config.js.
   if (key === "classic" && window.CHESSMATE_CHRISTMAS_EVENT !== false) return "christmas";
@@ -244,6 +247,7 @@ export function checkmateBurst(frameEl, fx, squareEl) {
     : fx === "obsidian" ? ["✦", "✧", "♛"]
     : fx === "aurora" ? ["❄", "✦", "❅"]
     : fx === "forest" ? ["🍃", "✦", "🌿"]
+    : fx === "admin" ? ["✦", "♛", "✧"]
     : ["✦", "✧", "⚡"];
   for (let n = 0; n < 18; n++) {
     const p = document.createElement("span");

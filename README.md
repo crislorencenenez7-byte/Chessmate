@@ -144,3 +144,14 @@ The Termux `ship.sh` release script schedules the website update banner for 15 m
 - Christmas tiles use the real 64 board squares rather than the supplied 7×7 bitmap.
 - All piece SVGs are centered in identical 94% square image boxes.
 - Package versions synchronized at 2.5.2; service-worker cache advanced to v56.
+
+
+## ChessMate v2.6.0 — Admin Royal Chess Board
+
+- **Admin Royal Board** (`public/themes/admin-royal-board.svg`, play assets `board-admin.svg`, `admin-frame.svg`, `admin-panel-left/right.svg`): black-and-gold marble 8×8 board, ornate gold frame with blue gemstones, crowns, royal side panels, A–H / 1–8 coordinates and ADMIN / CHESSMATE branding. Regenerate with `node scripts/build-admin-board.mjs`.
+- **Server-authoritative board priority** (`selectBoardTheme` in `server-postgres.js`): 1) Admin Royal Board when a verified Admin (`users.is_admin`, read from the database at socket authentication) is seated, 2) an eligible Exclusive Deals board, 3) Christmas Board, 4) Classic. The result is chosen once per room and sent to both players (and on reconnect). Set `CHRISTMAS_BOARD_EVENT=false` on the backend to skip step 3 (keep it in step with `window.CHESSMATE_CHRISTMAS_EVENT` in `public/config.js`).
+- The Admin Royal Board is not in `COSMETICS`: it is not sold, cannot be bought or equipped, and the equip/purchase endpoints reject its key.
+- **Admin finale** (`public/js/admin-royal-fx.js`): 3D royal frame around the player's existing profile picture, golden fire-breath toward the mated King, premium CHECKMATE banner, then ADMIN WON / OPPONENT WON / DRAW from the server's result. Visual only; it never touches chess state. Non-checkmate endings (resignation, abandonment, draws) skip the fire and banner and show only the result card.
+- `game-over` now also carries `finishId`, `boardTheme`, `adminColors` and `matedKing` (all computed on the server). Clients ignore a repeated `game-over` for the same game.
+- Admin Dashboard has an **Admin Royal Board** panel with the real SVG, the royal profile frame and a "Preview Checkmate Animation" button.
+- Service-worker cache advanced to v65 and the new assets added to the precache list.

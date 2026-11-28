@@ -1,9 +1,8 @@
-const CACHE = 'chessmate-shell-v68';
+const CACHE = 'chessmate-shell-v66';
 
 const CORE = [
   './',
   './index.html',
-  './themes/admin-board.svg',
   './style.css',
   './app.js',
   './pwa.js',
@@ -37,6 +36,12 @@ const CORE = [
   './themes/art-sapphire.webp',
   './js/themes.js',
   './js/pixi-fx.js',
+  './js/admin-royal-fx.js',
+  './themes/board-admin.svg',
+  './themes/admin-frame.svg',
+  './themes/admin-panel-left.svg',
+  './themes/admin-panel-right.svg',
+  './themes/admin-royal-board.svg',
   './vendor/pixi.min.mjs',
   './engine/stockfish-19-lite-single.js',
   './engine/stockfish-19-lite-single.wasm',

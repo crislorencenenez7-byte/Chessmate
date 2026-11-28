@@ -3,15 +3,38 @@ import { Engine, LEVELS } from "./js/engine.js";
 import { CLASSES, classifyMove, whiteScore, whiteWinPct, scoreText } from "./js/classify.js";
 import { resolveFx, FX_BY_BOARD, kingRing, lightningStrike, checkmateBurst } from "./js/themes.js";
 import { playThemeMate, MATE_SPLASH_FX, MATE_SPLASH_MS } from "./js/mate-fx.js";
+import { ADMIN_BOARD_KEY, buildRoyalAvatar, markAdminAvatar, playAdminFinale, cancelAdminFinale } from "./js/admin-royal-fx.js";
+
+/* Which board is on screen. Online rooms: the server picked it (Admin > Exclusive Deals > Christmas > Classic)
+   and both players received the same value. Solo games against the computer use the Admin board only
+   when the logged-in account is a verified Admin; everything else uses the player's own equipped board. */
+function adminSeatColors(g = G) {
+  if (!g) return [];
+  if (g.roomCode) return Array.isArray(g.adminColors) ? g.adminColors : [];      // from the server
+  if (g.mode === "ai" && g.myColor && user?.isAdmin === true) return [g.myColor];
+  return [];
+}
+function adminRoleOf(color, g = G) {
+  if (!adminSeatColors(g).includes(color)) return null;
+  if (g.roomCode) return g.roles?.[color] || "ADMIN";                           // trusted: sent by the server
+  return String(user?.username || "").toLowerCase() === "crislorence" ? "OWNER" : "ADMIN";
+}
+function activeBoardKey() {
+  const shared = G?.sharedBoardTheme;
+  if (shared) return shared === "christmas" ? "christmas_event" : shared === "classic" ? "classic_plain" : shared;
+  if (G && G.mode === "ai" && adminSeatColors(G).length) return ADMIN_BOARD_KEY;
+  return economyState.board || "classic";
+}
 
 // Exclusive-deal finale of the *equipped* board. (The free Christmas event look on the default board has none.)
 function mateFxKey() {
-  const key = G?.sharedBoardTheme || economyState.board || "classic";
+  const key = activeBoardKey();
   const fx = FX_BY_BOARD[key];
   return MATE_SPLASH_FX.includes(fx) ? fx : "";
 }
 
 const $ = id => document.getElementById(id);
+
 const FILES = "abcdefgh";
 const START = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 const PIECE_NAME = { k: "king", q: "queen", r: "rook", b: "bishop", n: "knight", p: "pawn" };
@@ -522,6 +545,34 @@ function showGlobalAnnouncement(data) {
   }, 7000);
 }
 
+/* Admin Dashboard: Admin Royal Board preview. Only reachable after the server has verified the admin session. */
+function initAdminRoyalPreview() {
+  if (user?.isAdmin !== true) return;
+  const img = $("admin-royal-preview-img");
+  if (img && !img.getAttribute("src")) img.src = img.dataset.src;
+  const glyph = AVATAR_GLYPHS[economyState.avatar] || "♞";
+  $("admin-royal-avatar")?.replaceChildren(buildRoyalAvatar(glyph));
+  const button = $("admin-royal-replay");
+  if (!button || button.dataset.bound) return;
+  button.dataset.bound = "1";
+  button.onclick = () => {
+    const figure = document.querySelector(".admin-royal-figure");
+    const king = figure?.querySelector(".admin-preview-king");
+    if (!figure || !king) return;
+    figure.scrollIntoView({ block: "center", behavior: "smooth" });
+    setTimeout(() => {
+      playAdminFinale({
+        glyph: AVATAR_GLYPHS[economyState.avatar] || "♞",
+        profile: { glyph: AVATAR_GLYPHS[economyState.avatar] || "♞", name: user?.username, rating: user?.rating ? String(user.rating) : "", role: String(user?.username || "").toLowerCase() === "crislorence" ? "OWNER" : "ADMIN" },
+        seatEl: $("admin-royal-avatar"), burst: true,
+        boardEl: figure, kingEl: king, checkmate: true, showHero: true,
+        verdict: "ADMIN WON", detail: "Preview only",
+        isValid: () => $("admin")?.classList.contains("active")
+      });
+    }, 350);
+  };
+}
+
 async function loadAdminSettings() {
   if (!user?.isAdmin || !token) {
     adminAuthenticated = false;
@@ -647,6 +698,7 @@ function rebuildLive() {
 }
 
 function newGame(mode, o = {}) {
+  cancelAdminFinale();
   engine.cancelQueued();
   G = {
     id: ++gameSeq, mode,
@@ -819,14 +871,23 @@ function setPlayers() {
         avatar_tournament_laurel:"🏅"
       };
       const isMe = !!user?.username && n.name === user.username;
-      const avatarKey = isMe ? (economyState?.avatar || "avatar_knight") : (n.avatarKey || "avatar_knight");
+      const adminSeat = adminSeatColors(G).includes(c);
+      // An Admin seat shows that player's real profile picture (as sent by the server) inside the royal frame.
+      const avatarKey = adminSeat && G.avatars?.[c] ? G.avatars[c]
+        : isMe ? (economyState?.avatar || "avatar_knight") : "avatar_knight";
       const avatarGlyph = glyphs[avatarKey] || "♞";
-      const isAdminPlayer = n.isAdmin === true || (!!adminAuthenticated && n.name === user?.username);
 
-      el.classList.toggle("admin-player", isAdminPlayer);
-      el.innerHTML = `<span class="match-avatar${isAdminPlayer ? " admin-royal-avatar" : ""}" aria-label="${isAdminPlayer ? "Admin " : ""}profile avatar">${avatarGlyph}${isAdminPlayer ? '<i class="admin-avatar-crown" aria-hidden="true">♛</i>' : ""}</span><span class="match-player-info"><span class="pn"></span><span class="pr"></span></span>`;
+      el.innerHTML = `<span class="match-avatar">${avatarGlyph}</span><span class="match-player-info"><span class="pn"></span><span class="pr"></span></span>`;
+      markAdminAvatar(el.querySelector(".match-avatar"), adminSeat);
+      if (adminSeat) {
+        const role = adminRoleOf(c);
+        const badge = document.createElement("span");
+        badge.className = "seat-role" + (role === "OWNER" ? " owner" : "");
+        badge.textContent = `♛ ${role}`;
+        el.querySelector(".match-player-info")?.append(badge);
+      }
       el.querySelector(".pn").textContent = n.name || "Player";
-      el.querySelector(".pr").textContent = (n.sub || "") + (isAdminPlayer ? " · ADMIN" : "");
+      el.querySelector(".pr").textContent = n.sub || "";
     }
   };
   fill($("pl-top"), top);
@@ -1103,6 +1164,31 @@ let boardSquareCache = null;
 let boardSquareOrientation = null;
 let boardSquareFx = null;
 
+/* Ornate side panels of the Admin Royal Board (wide screens only; hidden by CSS on phones). */
+function syncAdminSidePanels(on) {
+  const frame = document.querySelector("#game .board-frame");
+  if (!frame) return;
+  const has = frame.querySelector(":scope > .admin-side");
+  if (!on) { frame.querySelectorAll(":scope > .admin-side, :scope > .admin-tri, :scope > .admin-board-label").forEach(el => el.remove()); return; }
+  if (has) return;
+  // Triangular accents (top, bottom, left, right) and the ADMIN BOARD plaque: all sit on the frame, never on squares.
+  for (const pos of ["t", "b", "l", "r"]) {
+    const tri = document.createElement("i");
+    tri.className = `admin-tri admin-tri-${pos}`; tri.setAttribute("aria-hidden", "true");
+    frame.append(tri);
+  }
+  const label = document.createElement("span");
+  label.className = "admin-board-label"; label.textContent = "ADMIN BOARD";
+  frame.append(label);
+  for (const side of ["left", "right"]) {
+    const img = document.createElement("img");
+    img.className = `admin-side admin-side-${side}`;
+    img.src = `./themes/admin-panel-${side}.svg`;
+    img.alt = ""; img.setAttribute("aria-hidden", "true"); img.draggable = false; img.decoding = "async";
+    frame.append(img);
+  }
+}
+
 function render() {
   if (!G) return;
 
@@ -1114,18 +1200,19 @@ function render() {
     "theme-forest", "theme-sapphire", "theme-admin"
   );
 
-  const savedBoardTheme = G.sharedBoardTheme || (user?.isAdmin ? "board_admin" : economyState.board || "classic");
+  const savedBoardTheme = activeBoardKey();
   const boardTheme = savedBoardTheme === "board_rose" ? "classic" : savedBoardTheme;
   const fx = resolveFx(boardTheme);
 
   document.body.dataset.fx = fx || "";
   boardEl.classList.toggle("theme-sapphire", boardTheme === "board_sapphire");
 
-  if (boardTheme === "classic" || boardTheme === "board_christmas") boardEl.classList.add("theme-christmas");
+  if (boardTheme === "classic" || boardTheme === "board_christmas" || boardTheme === "christmas_event") boardEl.classList.add("theme-christmas");
+  if (boardTheme === ADMIN_BOARD_KEY) boardEl.classList.add("theme-admin");
+  syncAdminSidePanels(boardTheme === ADMIN_BOARD_KEY);
   if (boardTheme === "board_obsidian") boardEl.classList.add("theme-obsidian");
   if (boardTheme === "board_aurora") boardEl.classList.add("theme-aurora");
   if (boardTheme === "board_forest") boardEl.classList.add("theme-forest");
-  if (boardTheme === "board_admin") boardEl.classList.add("theme-admin");
 
   const vc = viewChess();
   const pos = vc.board();
@@ -1572,93 +1659,58 @@ function playMateFx() {
   }, 160);
 }
 
-function playAdminRoyalCheckmate(g, winnerColor, reveal) {
-  if (!g || g._adminMateSequenceStarted) return true;
-  const frame = document.querySelector(`.pl[data-color="${winnerColor}"]`);
-  const avatar = frame?.querySelector(".match-avatar");
+/* Admin Royal finale: used whenever a verified Admin is seated (server-reported online, or the signed-in
+   Admin against the computer). Visual only: the result itself is still decided by chess rules/the server. */
+function royalFinaleApplies(g) {
+  return !!g && g.mode !== "analysis" && !!g.over && !g.over.pendingServer && adminSeatColors(g).length > 0;
+}
+function startRoyalFinale(g) {
+  if (g._royalStarted) return;                        // repeated game-over events never replay it
+  g._royalStarted = true;
+  const o = g.over, admins = adminSeatColors(g);
+  const winner = o.result === "white" ? "w" : o.result === "black" ? "b" : null;
+  const adminWon = !!winner && admins.includes(winner);
+  const verdict = o.result === "draw" ? "DRAW"
+    : admins.length > 1 ? `${o.result.toUpperCase()} WON`
+    : adminWon ? "ADMIN WON" : "OPPONENT WON";
+  const reason = String(o.reason || "");
+  const detail = o.result === "draw" ? reason.charAt(0).toUpperCase() + reason.slice(1) : `By ${reason}`;
+  const checkmate = o.reason === "checkmate";
   const board = $("board");
-  const king = board?.querySelector(".sq.checkmate-king");
-  const boardFrame = board?.parentElement;
-  if (!frame || !avatar || !king || !boardFrame) return false;
-
-  g._adminMateSequenceStarted = true;
-  frame.classList.add("admin-victory-rise");
-  avatar.classList.add("admin-avatar-victory");
-
-  const from = avatar.getBoundingClientRect();
-  const to = king.getBoundingClientRect();
-  const fire = document.createElement("div");
-  fire.className = "admin-fire-stream";
-  fire.setAttribute("aria-hidden", "true");
-  fire.style.left = `${from.left + from.width / 2}px`;
-  fire.style.top = `${from.top + from.height / 2}px`;
-  fire.style.setProperty("--fire-dx", `${to.left + to.width / 2 - from.left - from.width / 2}px`);
-  fire.style.setProperty("--fire-dy", `${to.top + to.height / 2 - from.top - from.height / 2}px`);
-  for (let i = 0; i < 7; i++) {
-    const flame = document.createElement("i");
-    flame.style.setProperty("--flame-delay", `${i * 75}ms`);
-    fire.append(flame);
-  }
-  document.body.append(fire);
-  king.classList.add("admin-fire-target");
-  boardFrame.classList.add("admin-checkmate-stage");
-
-  window.setTimeout(() => {
-    if (G !== g) { fire.remove(); return; }
-    fire.remove();
-    const banner = document.createElement("div");
-    banner.className = "admin-checkmate-banner";
-    banner.innerHTML = '<span class="admin-banner-crown" aria-hidden="true">♛</span><strong>CHECKMATE</strong><small>ROYAL VICTORY</small>';
-    boardFrame.append(banner);
-    window.setTimeout(() => {
-      banner.classList.add("out");
-      window.setTimeout(() => {
-        banner.remove();
-        frame.classList.remove("admin-victory-rise");
-        avatar.classList.remove("admin-avatar-victory");
-        king.classList.remove("admin-fire-target");
-        boardFrame.classList.remove("admin-checkmate-stage");
-        reveal();
-      }, 420);
-    }, 1450);
-  }, 1250);
-  return true;
+  const kingEl = checkmate
+    ? (board?.querySelector(".sq.checkmate-king") || (o.matedKing ? board?.querySelector(`.sq[data-sq="${o.matedKing}"]`) : null))
+    : null;
+  const key = winner && g.avatars?.[winner] ? g.avatars[winner] : economyState.avatar;
+  const info = winner ? g.names?.[winner] : null;
+  playAdminFinale({
+    glyph: AVATAR_GLYPHS[key] || "♞",
+    profile: winner ? { glyph: AVATAR_GLYPHS[key] || "♞", name: info?.name, rating: info?.sub, role: adminRoleOf(winner, g) } : null,
+    seatEl: winner ? document.querySelector(`#game .pl[data-color="${winner}"]`) : null,
+    burst: true,
+    boardEl: board, kingEl, checkmate,
+    showHero: adminWon && checkmate && !!kingEl,
+    verdict, detail,
+    isValid: () => G === g && !!g.over
+  }).then(status => {
+    if (status === "done" && G === g && g.over && g.mode !== "analysis") showResult();
+  });
 }
 
 function showResultSoon() {
-  const g = G;
-  const o = g?.over;
-  const winnerColor = o?.result === "white" ? "w" : o?.result === "black" ? "b" : "";
-  const winnerName = winnerColor ? g?.names?.[winnerColor]?.name : "";
-  const adminWinner = !!winnerColor && (g?.names?.[winnerColor]?.isAdmin === true || (!!adminAuthenticated && winnerName === user?.username));
-
-  // Admin Royal Checkmate has its own complete animation sequence.
-  if (o?.reason === "checkmate" && adminWinner) {
-    setTimeout(() => {
-      if (G === g && G.over && G.mode !== "analysis") showResult();
-    }, 900);
-    return;
-  }
-
+  if (royalFinaleApplies(G)) { startRoyalFinale(G); return; }
   playMateFx();
-  const splash = o?.reason === "checkmate" && !!mateFxKey();
-  setTimeout(() => {
-    if (G === g && G.over && G.mode !== "analysis") showResult();
-  }, splash ? MATE_SPLASH_MS - 150 : 900);
+  const g = G;
+  const splash = g?.over?.reason === "checkmate" && !!mateFxKey();
+  setTimeout(() => { if (G === g && G.over && G.mode !== "analysis") showResult(); }, splash ? MATE_SPLASH_MS - 150 : 900);
 }
 function showResult() {
   const g=G;
   if (!g || !g.over || g._resultSequenceStarted) return;
   g._resultSequenceStarted=true;
   const o=g.over;
-  let title=o.result==="draw" ? "Draw" : G.myColor
+  const title=o.result==="draw" ? "Draw" : G.myColor
     ? (o.result===colorName(G.myColor) ? "You won!" : "You lost")
     : (o.result==="white" ? "White wins" : "Black wins");
-  const adminColor = ["w", "b"].find(c => g.names?.[c]?.isAdmin === true);
-  if (adminColor) {
-    title = o.result === "draw" ? "DRAW"
-      : o.result === colorName(adminColor) ? "ADMIN WON" : "OPPONENT WON";
-  }
   const detail=o.reason.charAt(0).toUpperCase()+o.reason.slice(1);
   const reveal=()=>{
     if(G!==g) return;
@@ -1667,13 +1719,7 @@ function showResult() {
     $("result-rating").textContent=o.ratingLine||"";
     $("overlay").classList.remove("hidden");
   };
-  if(o.reason!=="checkmate"){ reveal(); return; }
-
-  const winnerColor = o.result === "white" ? "w" : o.result === "black" ? "b" : "";
-  const winnerName = winnerColor ? g.names?.[winnerColor]?.name : "";
-  const adminWinner = !!winnerColor && (g.names?.[winnerColor]?.isAdmin === true || (!!adminAuthenticated && winnerName === user?.username));
-  if (adminWinner && playAdminRoyalCheckmate(g, winnerColor, reveal)) return;
-
+  if(o.reason!=="checkmate" || g._royalStarted){ reveal(); return; }
   if(mateFxKey()){ reveal(); return; }   // themed finale already played
 
   const board=$("board");
@@ -1832,6 +1878,7 @@ function setupBoardInput() {
 
 /* ------------------------------------------------------------------ navigation / menus */
 function leaveGame() {
+  cancelAdminFinale();
   if (G && G.roomCode && ["friends", "ranked"].includes(G.mode)) socket.emit("leave-room", G.roomCode);
   if (G) G.drag?.ghost?.remove();
   G = null;
@@ -1850,7 +1897,7 @@ function startAi() {
   const color = aiSetup.color === "r" ? (Math.random() < 0.5 ? "w" : "b") : aiSetup.color;
   const bot = BOT_PROFILES.find(x => x.id === aiSetup.bot) || BOT_PROFILES[4];
   aiSetup.level = bot.level;
-  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player", isAdmin: user?.isAdmin === true || adminAuthenticated, avatarKey: economyState?.avatar || "avatar_knight" };
+  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player" };
   const cpu = { name: bot.name, sub: `${bot.rating} challenge rating` };
   const game = newGame("ai", { orient: color, myColor: color, level: bot.level, bot: bot.id, names: color === "w" ? { w: me, b: cpu } : { w: cpu, b: me } });
 }
@@ -1859,15 +1906,16 @@ function startOnline(kind, code, players, myName, boardTheme = null) {
   const me = players.find(p => p.username === myName);
   const color = me ? me.color[0] : "w";
   const names = {};
-  for (const p of players) names[p.color[0]] = {
-    name: p.username,
-    sub: p.rating ? String(p.rating) : "",
-    isAdmin: p.isAdmin === true,
-    avatarKey: p.avatarKey || "avatar_knight"
-  };
+  for (const p of players) names[p.color[0]] = { name: p.username, sub: p.rating ? String(p.rating) : "" };
   names.w ??= { name: "White" }; names.b ??= { name: "Black" };
   const game = newGame(kind, { orient: color, myColor: color, roomCode: code, names });
   game.sharedBoardTheme = boardTheme || null;
+  // Admin seats and profile pictures come from the server (never from client-submitted values).
+  game.adminColors = players.filter(p => p.isAdmin === true).map(p => p.color[0]);
+  game.avatars = {};
+  game.roles = {};
+  for (const p of players) { game.avatars[p.color[0]] = p.avatar || "avatar_knight"; if (p.role) game.roles[p.color[0]] = p.role; }
+  setPlayers();
   render();
   return game;
 }
@@ -1904,6 +1952,8 @@ async function loadEconomy() {
   put("profile-avatar", AVATAR_GLYPHS[wallet.avatar] || "♞");
   put("profile-name", user?.username || "Player");
   applyProfileFx(wallet.board);
+  markAdminAvatar($("profile-avatar"), wallet.isAdmin === true);   // server-verified flag from /api/economy/me
+  markAdminAvatar($("home-avatar"), wallet.isAdmin === true);
   put("profile-stats", `${user?.rating ?? 800} ELO · ${user?.wins ?? 0} wins · ${wallet.diamonds} Diamonds`);
   renderCosmetics(catalog.cosmetics, wallet);
 }
@@ -2064,7 +2114,8 @@ function setupUI() {
     if (G.roomCode) socket.emit("resign", G.roomCode);
     else if (G.mode === "ai") {
       G.over = { result: G.myColor === "w" ? "black" : "white", reason: "resignation" };
-      render(); showResult();
+      render();
+      if (royalFinaleApplies(G)) startRoyalFinale(G); else showResult();
     }
   };
   $("result-review").onclick = () => {
@@ -2152,6 +2203,7 @@ function setupUI() {
       await loadTacoEvent();
       await loadAdminReleaseStatus();
       $("admin-panel").hidden = false;
+      initAdminRoyalPreview();
       renderBadge();
     } catch (e) {
       adminAuthenticated = false;
@@ -2366,6 +2418,11 @@ socket.on("room-resume", d => {
     $("room-code-box").classList.add("hidden");
   }
   G.sharedBoardTheme = d.boardTheme || null;
+  if (Array.isArray(d.players)) {
+    G.adminColors = d.players.filter(p => p.isAdmin === true).map(p => p.color[0]);
+    G.avatars = Object.fromEntries(d.players.map(p => [p.color[0], p.avatar || "avatar_knight"]));
+    G.roles = Object.fromEntries(d.players.filter(p => p.role).map(p => [p.color[0], p.role]));
+  }
   syncFromServer(d);
   render();
   toast("Reconnected to your game.");
@@ -2377,7 +2434,13 @@ socket.on("opponent-move", m => {
 });
 socket.on("game-over", d => {
   if (!G || G.roomCode !== d.code) return;
-  G.over = { result: d.result, reason: d.reason };
+  if (G._finishId) return;                                   // one game-over per game; repeats are ignored
+  G._finishId = d.finishId || "legacy";
+  G.over = { result: d.result, reason: d.reason, matedKing: d.matedKing || null };
+  if (d.boardTheme) G.sharedBoardTheme = d.boardTheme;
+  if (Array.isArray(d.adminColors)) G.adminColors = d.adminColors.map(c => String(c)[0]);
+  G.avatars = { ...(G.avatars || {}), ...(d.white?.avatar ? { w: d.white.avatar } : {}), ...(d.black?.avatar ? { b: d.black.avatar } : {}) };
+  G.roles = { ...(G.roles || {}), ...(d.white?.role ? { w: d.white.role } : {}), ...(d.black?.role ? { b: d.black.role } : {}) };
   if (d.ranked) {
     const mineColor = G.myColor === "w" ? "white" : "black";
     const mine = d[mineColor];

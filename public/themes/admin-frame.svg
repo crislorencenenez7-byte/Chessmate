@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720"><defs>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff3bd"/><stop offset=".22" stop-color="#e0b04a"/>
+    <stop offset=".5" stop-color="#8f5d13"/><stop offset=".72" stop-color="#f6da86"/>
+    <stop offset="1" stop-color="#a8761c"/>
+  </linearGradient>
+  <linearGradient id="goldRev" x1="1" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffe9a0"/><stop offset=".35" stop-color="#c8922e"/>
+    <stop offset=".62" stop-color="#7a4d0e"/><stop offset="1" stop-color="#f3d47c"/>
+  </linearGradient>
+  <linearGradient id="goldV" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff0b0"/><stop offset=".45" stop-color="#d6a23c"/>
+    <stop offset="1" stop-color="#7d5110"/>
+  </linearGradient>
+  <radialGradient id="gem" cx=".35" cy=".3" r=".85">
+    <stop offset="0" stop-color="#d8f0ff"/><stop offset=".32" stop-color="#4aa3ff"/>
+    <stop offset=".72" stop-color="#1348b8"/><stop offset="1" stop-color="#071a52"/>
+  </radialGradient>
+  <radialGradient id="lightSq" cx=".4" cy=".35" r=".95">
+    <stop offset="0" stop-color="#f6e6b0"/><stop offset=".6" stop-color="#e0c27a"/>
+    <stop offset="1" stop-color="#c9a257"/>
+  </radialGradient>
+  <radialGradient id="darkSq" cx=".4" cy=".35" r=".95">
+    <stop offset="0" stop-color="#26252a"/><stop offset=".6" stop-color="#121115"/>
+    <stop offset="1" stop-color="#060507"/>
+  </radialGradient>
+  <radialGradient id="panelBg" cx=".5" cy=".3" r=".9">
+    <stop offset="0" stop-color="#25221d"/><stop offset="1" stop-color="#070605"/>
+  </radialGradient>
+  <radialGradient id="stage" cx=".5" cy=".45" r=".75">
+    <stop offset="0" stop-color="#1c1710"/><stop offset="1" stop-color="#040302"/>
+  </radialGradient>
+  <linearGradient id="lacquer" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#14110c"/><stop offset="1" stop-color="#050403"/>
+  </linearGradient>
+</defs><g id="frame-play"><path d="M8.8 0H711.2A8.8 8.8 0 0 1 720 8.8V711.2A8.8 8.8 0 0 1 711.2 720H8.8A8.8 8.8 0 0 1 0 711.2V8.8A8.8 8.8 0 0 1 8.8 0ZM40 40h640v640h-640Z" fill-rule="evenodd" fill="url(#gold)" stroke="#3b2705" stroke-width="1.6"/><path d="M10.8 4H709.2A6.8 6.8 0 0 1 716 10.8V709.2A6.8 6.8 0 0 1 709.2 716H10.8A6.8 6.8 0 0 1 4 709.2V10.8A6.8 6.8 0 0 1 10.8 4ZM40 40h640v640h-640Z" fill-rule="evenodd" fill="url(#goldRev)" stroke="#fff0b0" stroke-opacity=".5" stroke-width=".8"/><rect x="8.8" y="8.8" width="702.4" height="702.4" rx="4.8" fill="none" stroke="#fff3c0" stroke-opacity=".75" stroke-width="1" stroke-dasharray="1.2 4" stroke-linecap="round"/><rect x="36" y="36" width="648" height="648" rx="2.4" fill="none" stroke="#2b1c04" stroke-width="4" opacity=".9"/><rect x="38.8" y="38.8" width="642.4" height="642.4" fill="none" stroke="#f6da86" stroke-width="1.6"/><polygon points="20,-1.5 26.84,13.16 41.5,20 26.84,26.84 20,41.5 13.16,26.84 -1.5,20 13.16,13.16" fill="url(#gold)" stroke="#4a3208" stroke-width=".8"/><g><circle cx="20" cy="20" r="10" fill="url(#goldRev)" stroke="#4a3208" stroke-width=".8"/><circle cx="20" cy="20" r="8.4" fill="url(#gem)"/><ellipse cx="17.48" cy="16.81" rx="2.86" ry="1.68" fill="#fff" opacity=".8"><animate attributeName="opacity" values=".45;.95;.45" dur="3.6s" repeatCount="indefinite"/></ellipse></g><polygon points="700,-1.5 706.84,13.16 721.5,20 706.84,26.84 700,41.5 693.16,26.84 678.5,20 693.16,13.16" fill="url(#gold)" stroke="#4a3208" stroke-width=".8"/><g><circle cx="700" cy="20" r="10" fill="url(#goldRev)" stroke="#4a3208" stroke-width=".8"/><circle cx="700" cy="20" r="8.4" fill="url(#gem)"/><ellipse cx="697.48" cy="16.81" rx="2.86" ry="1.68" fill="#fff" opacity=".8"><animate attributeName="opacity" values=".45;.95;.45" dur="2.4s" repeatCount="indefinite"/></ellipse></g><polygon points="20,678.5 26.84,693.16 41.5,700 26.84,706.84 20,721.5 13.16,706.84 -1.5,700 13.16,693.16" fill="url(#gold)" stroke="#4a3208" stroke-width=".8"/><g><circle cx="20" cy="700" r="10" fill="url(#goldRev)" stroke="#4a3208" stroke-width=".8"/><circle cx="20" cy="700" r="8.4" fill="url(#gem)"/><ellipse cx="17.48" cy="696.81" rx="2.86" ry="1.68" fill="#fff" opacity=".8"><animate attributeName="opacity" values=".45;.95;.45" dur="3.6s" repeatCount="indefinite"/></ellipse></g><polygon points="700,678.5 706.84,693.16 721.5,700 706.84,706.84 700,721.5 693.16,706.84 678.5,700 693.16,693.16" fill="url(#gold)" stroke="#4a3208" stroke-width=".8"/><g><circle cx="700" cy="700" r="10" fill="url(#goldRev)" stroke="#4a3208" stroke-width=".8"/><circle cx="700" cy="700" r="8.4" fill="url(#gem)"/><ellipse cx="697.48" cy="696.81" rx="2.86" ry="1.68" fill="#fff" opacity=".8"><animate attributeName="opacity" values=".45;.95;.45" dur="2.4s" repeatCount="indefinite"/></ellipse></g><path d="M360 8.8L367.84 20L360 31.2L352.16 20Z" fill="url(#gold)" stroke="#4a3208" stroke-width=".7"/><circle cx="360" cy="20" r="3.6" fill="url(#gem)"/><path d="M360 688.8L367.84 700L360 711.2L352.16 700Z" fill="url(#gold)" stroke="#4a3208" stroke-width=".7"/><circle cx="360" cy="700" r="3.6" fill="url(#gem)"/><path d="M20 348.8L27.84 360L20 371.2L12.16 360Z" fill="url(#gold)" stroke="#4a3208" stroke-width=".7"/><circle cx="20" cy="360" r="3.6" fill="url(#gem)"/><path d="M700 348.8L707.84 360L700 371.2L692.16 360Z" fill="url(#gold)" stroke="#4a3208" stroke-width=".7"/><circle cx="700" cy="360" r="3.6" fill="url(#gem)"/></g></svg>

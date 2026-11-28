@@ -212,11 +212,18 @@ app.post("/api/admin/announcement", adminAuth, (req, res) => {
   res.json({ success: true });
 });
 
+// OWNER for the owner account, ADMIN for other verified admins (same rule as the announcement panel).
+function roleOfUser(username, isAdmin) {
+  if (isAdmin !== true) return null;
+  return String(username || "").toLowerCase() === "crislorence" ? "OWNER" : "ADMIN";
+}
+
 function publicUser(u) {
   return {
     id: u.id,
     username: u.username,
     isAdmin: u.is_admin === true,
+    role: roleOfUser(u.username, u.is_admin === true),
     rating: u.rating,
     highestRating: u.highest_rating,
     wins: u.wins,
@@ -453,6 +460,7 @@ app.post("/api/economy/topup", auth, async (req, res) => {
 app.post("/api/economy/purchase", auth, async (req, res) => {
   const key = String(req.body.key || "");
   const item = COSMETICS[key];
+  if (key === "board_admin_royal") return res.status(403).json({ error: "The Admin Royal Board is not available in the shop." });
   if (!item || item.reward === true || item.price < 0) return res.status(400).json({ error: "This cosmetic is not available for direct purchase." });
   const client = await pool.connect();
   try {
@@ -481,6 +489,7 @@ app.post("/api/economy/purchase", auth, async (req, res) => {
 });
 app.post("/api/economy/equip", auth, async (req, res) => {
   const key = String(req.body.key || ""), item = COSMETICS[key];
+  if (key === "board_admin_royal") return res.status(403).json({ error: "The Admin Royal Board cannot be equipped." });
   if (!item) return res.status(400).json({ error: "Unknown cosmetic." });
   try {
     const own = item.price === 0 ? true : (await pool.query("SELECT 1 FROM cosmetic_purchases WHERE user_id=$1 AND cosmetic_key=$2", [req.user.id,key])).rowCount > 0;
@@ -693,19 +702,59 @@ function playerOf(room, socketId) {
   return room.players.find(p => p.id === socketId);
 }
 
-function sharedBoardTheme(room) {
-  // Admin status is sourced only from the authenticated server-side user record.
-  if (room.players.some(p => p.user?.isAdmin === true)) return "board_admin";
+// ---------------------------------------------------------------------------
+// Multiplayer board selection (server-authoritative; clients only display it).
+//   1. Admin Royal Board   - a verified Admin (users.is_admin, loaded from the database when the
+//                            socket authenticated) is seated in the room.
+//   2. Exclusive Deals     - no Admin; a player has an eligible Exclusive Deals board equipped.
+//   3. Christmas Board     - nothing higher; the free Christmas event board is running.
+//   4. Classic Board       - fallback.
+// The Admin Royal Board is intentionally NOT in COSMETICS: it cannot be bought, equipped or granted.
+// The value is chosen once when the second player sits down and frozen for the life of the room,
+// so both players (and a reconnecting player) always receive the same board.
+// ---------------------------------------------------------------------------
+const ADMIN_BOARD_KEY = "board_admin_royal";
+const EXCLUSIVE_BOARD_PRIORITY = [
+  "board_sapphire", "board_obsidian", "board_aurora", "board_forest", "board_christmas"
+];
+const CHRISTMAS_BOARD_EVENT = String(process.env.CHRISTMAS_BOARD_EVENT ?? "true").toLowerCase() !== "false";
 
-  // Exclusive Deals boards outrank the seasonal Christmas board.
-  for (const key of ["board_sapphire", "board_obsidian", "board_aurora", "board_forest"]) {
+function isEligibleExclusiveBoard(key) {
+  const item = COSMETICS[key];
+  return !!item && item.type === "board" && item.exclusive === true && item.deal === true && key !== ADMIN_BOARD_KEY;
+}
+
+function selectBoardTheme(room) {
+  if (room.players.some(p => p.user?.isAdmin === true)) return ADMIN_BOARD_KEY;
+
+  for (const key of EXCLUSIVE_BOARD_PRIORITY) {
+    if (!isEligibleExclusiveBoard(key)) continue;
     if (room.players.some(p => p.user?.boardKey === key)) return key;
   }
 
-  if (room.players.some(p => p.user?.boardKey === "board_christmas")) {
-    return "board_christmas";
-  }
+  return CHRISTMAS_BOARD_EVENT ? "christmas" : "classic";
+}
 
+function sharedBoardTheme(room) {
+  if (!room.boardTheme && room.players.length >= 2) room.boardTheme = selectBoardTheme(room);
+  return room.boardTheme || null;
+}
+
+function adminColorsOf(room) {
+  return room.players.filter(p => p.user?.isAdmin === true).map(p => p.color);
+}
+
+// Square of the king that is in checkmate (the side to move), taken from the server's own position.
+function matedKingSquare(chess) {
+  if (!chess.isCheckmate()) return null;
+  const side = chess.turn();
+  const rows = chess.board();
+  for (let r = 0; r < 8; r++) {
+    for (let f = 0; f < 8; f++) {
+      const piece = rows[r][f];
+      if (piece && piece.type === "k" && piece.color === side) return "abcdefgh"[f] + (8 - r);
+    }
+  }
   return null;
 }
 
@@ -714,8 +763,9 @@ function playersPayload(room) {
     username: p.user.username,
     rating: p.user.rating,
     color: p.color,
-    isAdmin: p.user?.isAdmin === true,
-    avatarKey: p.user?.avatar || p.user?.avatarKey || "avatar_knight"
+    isAdmin: p.user.isAdmin === true,
+    role: roleOfUser(p.user.username, p.user.isAdmin === true),
+    avatar: p.user.avatar || "avatar_knight"
   }));
 }
 
@@ -860,9 +910,17 @@ async function finishRoom(room, result, reason) {
   const publicB = publicUser(freshB);
   const changes = { white: dw, black: dbb };
 
+  // finishRoom() runs at most once per room (room.finished), so finishId is unique per game and lets
+  // clients ignore a repeated game-over for the same game.
   io.to(room.code).emit("game-over", {
-    code: room.code, result, reason, ranked: !!room.ranked,
-    white: publicW, black: publicB, changes
+    code: room.code, finishId: crypto.randomUUID(), finishedAt: Date.now(), result, reason, ranked: !!room.ranked,
+    white: publicW, black: publicB, changes,
+    boardTheme: sharedBoardTheme(room),
+    adminColors: [
+      publicW.isAdmin === true ? "white" : null,
+      publicB.isAdmin === true ? "black" : null
+    ].filter(Boolean),
+    matedKing: reason === "checkmate" ? matedKingSquare(room.chess) : null
   });
 
   if (room.ranked) {
@@ -872,9 +930,13 @@ async function finishRoom(room, result, reason) {
   }
 
   for (const p of room.players) {
-    const socket = socketUsers.get(p.id);
-    if (socket) {
-      socketUsers.set(p.id, p.color === "white" ? publicW : publicB);
+    const socketUser = socketUsers.get(p.id);
+    if (socketUser) {
+      socketUsers.set(p.id, {
+        ...(p.color === "white" ? publicW : publicB),
+        isAdmin: socketUser.isAdmin === true,
+        boardKey: socketUser.boardKey || "classic"
+      });
     }
   }
 }

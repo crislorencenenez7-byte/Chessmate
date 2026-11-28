@@ -295,15 +295,6 @@
       <h3>Welcome, CrisLorence</h3>
     </div>
 
-    <div class="admin-feature-panel admin-royal-preview-panel">
-      <h3>♛ Admin Royal Chess Board</h3>
-      <p class="muted">Exclusive administrator board. It automatically appears to both players whenever a verified Admin joins a match.</p>
-      <div class="admin-royal-preview">
-        <img src="./themes/admin-board.svg" alt="Admin Royal Chess Board preview">
-      </div>
-      <p class="admin-royal-preview-note">SERVER-VERIFIED ADMIN EXCLUSIVE · BLACK MARBLE · GOLDEN ROYAL FRAME</p>
-    </div>
-
     <div class="admin-feature-panel">
       <h3>Announcement Panel</h3>
       <p class="muted">Send a message to every connected player. It disappears after 7 seconds.</p>
@@ -345,6 +336,27 @@
       <p id="admin-release-date" class="release-date">Checking release schedule…</p>
       <button id="admin-refresh-release" class="secondary" type="button">Refresh Update Status</button>
       <p id="admin-release-note" class="notice" aria-live="polite">Release information loads from the published update configuration.</p>
+    </div>
+
+    <div class="admin-feature-panel admin-royal-panel">
+      <div class="admin-royal-head"><h3>Admin Royal Board</h3><span class="admin-only-badge">ADMIN ONLY</span></div>
+      <p class="muted">Exclusive to verified administrators. The server selects it automatically whenever an Admin is playing. It is not sold in the cosmetics shop and regular players cannot equip it.</p>
+      <figure class="admin-royal-figure">
+        <img id="admin-royal-preview-img" data-src="./themes/admin-royal-board.svg" alt="Admin Royal Chess Board: black and gold marble squares, ornate gold frame with blue gemstones, crowns and royal side panels" width="1300" height="920" decoding="async">
+        <i class="admin-preview-king" aria-hidden="true"></i>
+      </figure>
+      <div class="admin-royal-profile">
+        <div id="admin-royal-avatar" class="admin-royal-avatar-slot"></div>
+        <div><strong>Royal profile frame</strong><p class="muted tiny">Your existing profile picture inside an animated 3D gold frame with crown and gemstones.</p></div>
+      </div>
+      <ol class="admin-royal-priority">
+        <li><b>Admin Royal Board</b> when a verified Admin is playing</li>
+        <li><b>Exclusive Deals board</b> when no Admin is present</li>
+        <li><b>Christmas Board</b> when nothing higher applies</li>
+        <li><b>Classic Board</b> as the fallback</li>
+      </ol>
+      <button id="admin-royal-replay" class="secondary" type="button">Preview Checkmate Animation</button>
+      <p id="admin-royal-note" class="notice" aria-live="polite">Preview only. No game, rating or result is affected.</p>
     </div>
   </div>
 </section>
