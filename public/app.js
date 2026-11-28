@@ -821,7 +821,7 @@ function setPlayers() {
       const isMe = !!user?.username && n.name === user.username;
       const avatarKey = isMe ? (economyState?.avatar || "avatar_knight") : (n.avatarKey || "avatar_knight");
       const avatarGlyph = glyphs[avatarKey] || "♞";
-      const isAdminPlayer = n.isAdmin === true;
+      const isAdminPlayer = n.isAdmin === true || (!!adminAuthenticated && n.name === user?.username);
 
       el.classList.toggle("admin-player", isAdminPlayer);
       el.innerHTML = `<span class="match-avatar${isAdminPlayer ? " admin-royal-avatar" : ""}" aria-label="${isAdminPlayer ? "Admin " : ""}profile avatar">${avatarGlyph}${isAdminPlayer ? '<i class="admin-avatar-crown" aria-hidden="true">♛</i>' : ""}</span><span class="match-player-info"><span class="pn"></span><span class="pr"></span></span>`;
@@ -1629,7 +1629,8 @@ function showResultSoon() {
   const g = G;
   const o = g?.over;
   const winnerColor = o?.result === "white" ? "w" : o?.result === "black" ? "b" : "";
-  const adminWinner = !!winnerColor && g?.names?.[winnerColor]?.isAdmin === true;
+  const winnerName = winnerColor ? g?.names?.[winnerColor]?.name : "";
+  const adminWinner = !!winnerColor && (g?.names?.[winnerColor]?.isAdmin === true || (!!adminAuthenticated && winnerName === user?.username));
 
   // Admin Royal Checkmate has its own complete animation sequence.
   if (o?.reason === "checkmate" && adminWinner) {
@@ -1669,7 +1670,8 @@ function showResult() {
   if(o.reason!=="checkmate"){ reveal(); return; }
 
   const winnerColor = o.result === "white" ? "w" : o.result === "black" ? "b" : "";
-  const adminWinner = !!winnerColor && g.names?.[winnerColor]?.isAdmin === true;
+  const winnerName = winnerColor ? g.names?.[winnerColor]?.name : "";
+  const adminWinner = !!winnerColor && (g.names?.[winnerColor]?.isAdmin === true || (!!adminAuthenticated && winnerName === user?.username));
   if (adminWinner && playAdminRoyalCheckmate(g, winnerColor, reveal)) return;
 
   if(mateFxKey()){ reveal(); return; }   // themed finale already played
@@ -1848,7 +1850,7 @@ function startAi() {
   const color = aiSetup.color === "r" ? (Math.random() < 0.5 ? "w" : "b") : aiSetup.color;
   const bot = BOT_PROFILES.find(x => x.id === aiSetup.bot) || BOT_PROFILES[4];
   aiSetup.level = bot.level;
-  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player", isAdmin: user?.isAdmin === true, avatarKey: economyState?.avatar || "avatar_knight" };
+  const me = { name: user?.username || "You", sub: user ? `${user.rating} ELO` : "Player", isAdmin: user?.isAdmin === true || adminAuthenticated, avatarKey: economyState?.avatar || "avatar_knight" };
   const cpu = { name: bot.name, sub: `${bot.rating} challenge rating` };
   const game = newGame("ai", { orient: color, myColor: color, level: bot.level, bot: bot.id, names: color === "w" ? { w: me, b: cpu } : { w: cpu, b: me } });
 }
