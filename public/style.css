@@ -3429,3 +3429,133 @@ body[data-fx="rosewood"] #game .pl, body[data-fx="rosewood"] #game .notation, bo
     column-gap: 18px !important;
   }
 }
+
+/* ================================================================
+   v2.5.4 — 8x8 BOARD ALIGNMENT + PREMIUM FRAME CLEARANCE
+   ================================================================ */
+
+/* Dedicated evaluation column with safe clearance from the frame. */
+#game .board-area {
+  display: grid !important;
+  grid-template-columns: 26px minmax(0, 1fr) !important;
+  column-gap: 24px !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  width: min(100%, calc(var(--bs) + 50px)) !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-inline: auto !important;
+  overflow: visible !important;
+}
+
+#game .eval {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 26px !important;
+  min-width: 26px !important;
+  max-width: 26px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  align-self: stretch !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+#game .eval-bar {
+  width: 16px !important;
+  max-width: 16px !important;
+  min-height: 0 !important;
+}
+
+#game .board-frame {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  max-width: var(--bs) !important;
+  min-width: 0 !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  position: relative !important;
+  align-self: start !important;
+  overflow: visible !important;
+}
+
+/* Keep the board itself a mathematically exact 8x8 grid. */
+#game #board {
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(8, minmax(0, 1fr)) !important;
+  overflow: hidden !important;
+}
+
+/* Christmas artwork is replaced by real 64-square geometry.
+   This prevents the old bitmap from shifting the pieces. */
+#game #board.theme-christmas {
+  background-image: none !important;
+  background-color: #0b482c !important;
+}
+
+#game #board.theme-christmas .sq.light {
+  background: linear-gradient(145deg, #fff9e9, #e9d9b8) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px #d2b66b66 !important;
+}
+
+#game #board.theme-christmas .sq.dark {
+  background: linear-gradient(145deg, #1d7548, #0b482c) !important;
+  background-image: none !important;
+  box-shadow: inset 0 0 0 1px #d9bd6c55 !important;
+}
+
+/* Decorative frame stays outside the evaluation column. */
+#game .board-frame::before,
+#game .board-frame::after {
+  inset: -6px !important;
+  padding: 4px !important;
+  pointer-events: none !important;
+}
+
+#game .board-frame::before { z-index: 0 !important; }
+#game .board-frame::after { z-index: 3 !important; }
+#game #board { position: relative !important; z-index: 1 !important; }
+
+/* Consistent piece centering in every square. */
+#game #board .sq {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+#game #board .sq > img.piece {
+  inset: 3% !important;
+  width: 94% !important;
+  height: 94% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+@media (max-width: 700px) {
+  #game .board-area {
+    width: min(100%, calc(100vw - 2 * var(--pad))) !important;
+    grid-template-columns: 24px minmax(0, 1fr) !important;
+    column-gap: 24px !important;
+  }
+
+  #game .eval {
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+  }
+
+  #game .board-frame {
+    width: 100% !important;
+    max-width: var(--bs) !important;
+  }
+}
